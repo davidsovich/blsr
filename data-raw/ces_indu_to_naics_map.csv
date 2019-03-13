@@ -1,0 +1,23 @@
+industry_code,description,level,private_sector_flag,naics_supersector_code,naics_supersector_name
+00000000,Total nonfarm,0,1,,
+05000000,Total private,1,1,,
+06000000,Goods-producing,4,1,,
+07000000,Service providing,4,1,,
+08000000,Private service-providing,4,1,,
+10000000,Mining and logging,2,1,10,Natural resources and mining
+20000000,Construction,2,1,20,Construction
+30000000,Manufacturing,2,1,30,Manufacturing
+31000000,Durable goods,3,1,,
+32000000,Nondurable goods,3,1,,
+40000000,"Trade, transportation, and utilities",2,1,40,"Trade, transportation, and utilities"
+41000000,Wholesale trade,3,1,,
+42000000,Retail trade,3,1,,
+43000000,Transportation and warehousing,3,1,,
+44000000,Utilities,3,1,,
+50000000,Information,2,1,50,Information
+55000000,Financial activities,2,1,55,Financial activities
+60000000,Professional and business services,2,1,60,Professional and business services
+65000000,Education and health services,2,1,65,Education and health services
+70000000,Leisure and hospitality,2,1,70,Leisure and hospitality
+80000000,Other services,2,1,80,Other services
+90000000,Government,2,0,90,Government

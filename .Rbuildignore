@@ -1,0 +1,8 @@
+^\.gitignore$
+^\.github$
+^\.git$
+^README\.md$
+^data-raw$
+^tests$
+^.*\.Rproj$
+^\.Rproj\.user$

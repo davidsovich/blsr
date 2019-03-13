@@ -1,0 +1,185 @@
+
+#
+# CES codes functions
+#
+
+ces.get_codes = function(bls_dir, national_or_state_data = "national") { 
+   
+   #Location of API data definitions
+   api_dir = paste0(bls_dir, "api_series_definitions/")
+   
+   #Load CES codes for national level or state level
+   if(national_or_state_data == "national"){
+   
+      #Load CES code definitions
+      ces_list = suppressMessages(list( prefix = "CE",
+                                        seasonal_adj = readr::read_csv(file=paste0(api_dir, "seasonal_adjustment_definitions.csv")),
+                                        industry_codes = readr::read_csv(file=paste0(api_dir, "ces_industry_definitions.csv"), 
+                                                                         col_types = cols(.default = "c")),
+                                        data_type_codes = readr::read_csv(file=paste0(api_dir, "ces_data_type_definitions.csv")),
+                                        series_id_map = readr::read_csv(file=paste0(api_dir, "ces_series_id_map.csv"))))
+   } else {
+      
+      #Load CES code definitions
+      ces_list = suppressMessages(list( prefix = "SM",
+                                        seasonal_adj = readr::read_csv(file=paste0(api_dir, "seasonal_adjustment_definitions.csv")),
+                                        industry_codes = readr::read_csv(file=paste0(api_dir, "ces_industry_definitions.csv"), 
+                                                                          col_types = cols(.default = "c")),
+                                        state_codes = readr::read_csv(file=paste0(api_dir, "ces_state_codes.csv")), 
+                                        data_type_codes = readr::read_csv(file=paste0(api_dir, "ces_data_type_definitions.csv")),
+                                        series_id_map = readr::read_csv(file=paste0(api_dir, "ces_series_id_map_states.csv"))))
+      
+   }
+   
+   #Return result
+   return(ces_list)
+   
+}
+
+ces.create_national_series = function(adjustment = "S", industry = c("00000000"), data_type = c("01")) {
+   
+   #Create the grid expansion
+   temp_str = expand.grid(c("CE"), adjustment, industry, data_type)
+   
+   #Compress to strings
+   temp_str = apply( temp_str, 1, FUN = function(x) { paste(x, collapse = "", sep = "") })
+   
+   #Send warning if number of query strings exceeds API limit
+   if(length(temp_str)>50){message("Warning! BLS API only allows 50 (25) series per query with (without) an API key. Please adjust accordingly.")}
+   
+   #Return result
+   return(temp_str)
+
+}
+
+ces.create_state_series = function(adjustment = "S", states = c("0100000"), industry = c("00000000"), data_type = c("01")){
+   
+   #Create the grid expansion
+   temp_str = expand.grid(c("SM"), adjustment, states, industry, data_type)
+   
+   #Compress to strings
+   temp_str = apply( temp_str, 1, FUN = function(x) { paste(x, collapse = "", sep = "") })
+   
+   #Send warning if number of query strings exceeds API limit
+   if(length(temp_str)>50){message("Warning! BLS API only allows 50 (25) series per query with (without) an API key. Please adjust accordingly.")}
+   
+   #Return result
+   return(temp_str)
+   
+}
+
+ces.add_ids = function(bls_dir, ces_cf, national_or_state_data = "national") {
+   
+   #Load the JOLTS codes
+   ces_codes = ces.get_codes(bls_dir)
+   
+   
+}
+
+get_ces_map = function() {
+   
+   
+   
+}
+
+ces.add_ids = function() { 
+   
+   
+}
+
+
+#
+# Jolts codes function
+#
+get_jolts_codes = function(bls_dir) {
+   
+   #Location of API data definitions
+   api_dir = paste0(bls_dir, "api_series_definitions/")
+   
+   #Load JOLTS code definitions
+   jolts_list = suppressMessages(list( prefix = "JT",
+                      seasonal_adj = readr::read_csv(file=paste0(api_dir, "seasonal_adjustment_definitions.csv")),
+                      indu_codes = readr::read_csv(file=paste0(api_dir, "jolts_industry_definitions.csv")),
+                      region_codes = readr::read_csv(file=paste0(api_dir, "jolts_region_definitions.csv")),
+                      rate_level_codes = readr::read_csv(file=paste0(api_dir, "jolts_rate_level_definitions.csv")),
+                      element_codes = readr::read_csv(file=paste0(api_dir, "jolts_data_element_definitions.csv")),
+                      series_id_map = readr::read_csv(file=paste0(api_dir, "jolts_series_id_map.csv"))))
+   
+   #Return result
+   return(jolts_list)
+   
+}
+
+create_jolts_series = function(adjustment = "S", industry = c("000000"), region = "00", data_element = c("HI"), output = "L") {
+   
+   #Create the grid expansion
+   temp_str = expand.grid(c("JT"), adjustment, industry, region, data_element, output)
+   
+   #Compress to strings
+   temp_str = apply( temp_str, 1, FUN = function(x) { paste(x, collapse = "", sep = "") })
+   
+   #Send warning if number of query strings exceeds API limit
+   if(length(temp_str)>50){message("Warning! BLS API only allows 50 (25) series per query with (without) an API key. Please adjust accordingly.")}
+   
+   #Return result
+   return(temp_str)
+   
+}
+
+get_jolts_naics_map = function(bls_dir) {
+   
+   #Location of API data definitions
+   api_dir = paste0(bls_dir, "api_series_definitions/")
+   
+   #Load and return the JOLTS industry to NAICS sector map
+   jolts_map = suppressMessages(readr::read_csv(file=paste0(api_dir, "jolts_indu_to_naics_map.csv")))
+   
+   #Return result
+   return(jolts_map)
+   
+}
+
+add_jolts_ids = function(bls_dir, jolts_df) {
+   
+   #Load the JOLTS codes
+   jolts_codes = get_jolts_codes(bls_dir)
+   
+   #Append on archive and extract relevant substrings
+   jolts_df = jolts_df %>%
+      dplyr::mutate( archive = lubridate::year(date)*100+lubridate::month(date),
+              seasonal_code = substr(seriesID, 3, 3),
+              seasonal_code = ifelse( seasonal_code == "S", "seasonally adjusted", "unadjusted"),
+              indu_code = substr(seriesID, 4, 9),
+              element_code = substr(seriesID, 12, 13),
+              region_code = substr(seriesID, 10, 11) ) %>%
+      dplyr::left_join( y = jolts_codes$region_codes %>%
+                     dplyr::rename(region_name = description),
+                 by = c("region_code"="region_code") ) %>%
+      dplyr::left_join( y = jolts_codes$element_codes %>%
+                     dplyr::rename(variable_name = description) %>%
+                     dplyr::select(dataelement_code, variable_name),
+                 by = c("element_code"="dataelement_code") ) %>%
+      dplyr::left_join( y = jolts_codes$indu_codes %>%
+                     dplyr::rename(industry_name = description) %>% 
+                     dplyr::select(industry_code, industry_name), 
+                 by = c("indu_code"="industry_code") )
+   
+   #Merge on NAICS supersector information
+   jolts_df = jolts_df %>%
+      dplyr::left_join( y = get_jolts_naics_map(bls_dir) %>%
+                            dplyr::select(-one_of("level", "description")),
+                        by = c("indu_code"="industry_code") )
+   
+   #Keep subset of variables
+   jolts_df = jolts_df %>%
+      dplyr::select( archive, year, period, seriesID, value, variable_name, 
+                     industry_name, region_name, seasonal_code, private_sector_flag,
+                     naics_supersector_code, naics_supersector_name )
+   
+   #Return the result
+   return(jolts_df)
+   
+}
+              
+   
+   

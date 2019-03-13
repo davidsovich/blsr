@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552058570794.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "61|39|97|0|\n100|36|143|0|\n146|32|177|0|\n",
+    "hash" : "0",
+    "id" : "F89AC2D8",
+    "lastKnownWriteTime" : 1552514898,
+    "last_content_update" : 1552514900798,
+    "path" : "C:/Users/dsovich/Dropbox/Programming/Packages/blsr/R/utils.R",
+    "project_path" : "R/utils.R",
+    "properties" : {
+        "cursorPosition" : "13,37",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

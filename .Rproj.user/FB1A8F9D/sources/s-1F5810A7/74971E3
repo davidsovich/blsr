@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552058644304.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "5|72|36|0|\n38|104|52|0|\n93|37|110|0|\n141|45|181|0|\n",
+    "hash" : "0",
+    "id" : "74971E3",
+    "lastKnownWriteTime" : 1551029390,
+    "last_content_update" : 1552508589448,
+    "path" : "C:/Users/dsovich/Dropbox/Programming/rBLS/Code/bls_functions.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "140,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

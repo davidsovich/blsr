@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552058651562.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CB681E42",
+    "lastKnownWriteTime" : 1551706514,
+    "last_content_update" : 1551706514,
+    "path" : "C:/Users/dsovich/Dropbox/Programming/rBLS/Code/BLS.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "313,6",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 9,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

@@ -1,0 +1,421 @@
+---
+title: "Bond data match summary"
+author: "David Sovich"
+date: "February 19, 2019"
+output:
+  html_document:
+    self_contained: no
+    number_sections: true
+    highlight: pygments
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE,  warning=FALSE, results = "hide", message=FALSE}
+library(tidyverse)
+library(RPostgres)
+library(DBI)
+library(dbplyr)
+library(lubridate)
+library(zoo)
+library(reshape2)
+library(foreign)
+```
+
+This document displays the match quality between TRACE monthly yield panel, Mergent issuances, and CRSP/Compustat. 
+
+Begin by loading the custom rWRDS package:
+
+```{r, warning=FALSE, results = "hide", message=FALSE}
+
+source("C:/Users/SOVICHD/Dropbox/Programming/rWRDS/WRDS_functions.R")
+
+```
+
+Now connect to WRDS:
+
+```{r, warning=FALSE, results = "hide", message=FALSE}
+
+wrds = rWRDS.connect()
+
+```
+
+Data comes from the following sources:
+
+1. The TRACE monthly yield panel is downloaded directly from WRDS in STATA dta format: <https://wrds-www.wharton.upenn.edu/pages/support/manuals-and-overviews/wrds-bond-return/>. This dataset is only populated during months in which a bond trades. 
+
+2. The Mergent issuance data is downloaded within the rWRDS package.
+
+3. The linking table between TRACE and CRSP-Compustat is downloaded from WRDS and then altered using the rWRDS package. 
+
+4. The linking table between Mergent and CRSP-Compustat is created from the TRACE linking table. It extrapolates all TRACE-links to the issuer-id level. 
+
+# TRACE-CRSP linking table 
+
+Load and clean the TRACE-CRSP linking table from the WRDS team:
+
+```{r}
+
+#Load the data
+linking_file = "C:/Users/SOVICHD/Dropbox/Research/Bond Indexing/Data/Build/inputs/bond_cusip_permno_linking_table.dta"
+link_df = as.tibble(read.dta( file = linking_file ))
+
+
+#Clean the file
+link_df = rWRDS.clean_trace_crsp_linking_table(wrds, link_df)
+
+```
+
+Summarize the file:
+
+```{r}
+
+#Number of unique cusips and permnos with links
+length(unique(link_df$cusip))
+length(unique(link_df$permno))
+
+#Distribution of number of permnos per cusip (prevalence of company identifier changes)
+count_df = link_df %>%
+   group_by( cusip ) %>%
+   summarise( num_permnos = n_distinct( permno ) )
+table(count_df$num_permnos)
+
+```
+
+# TRACE-CRSP-Compustat monthly matches
+
+Load the monthly TRACE data and append on permnos and gvkeys: 
+
+```{r, warning=FALSE, results = "hide", message=FALSE, cache = TRUE}
+
+#TRACE data directory
+yield_file = "C:/Users/SOVICHD/Dropbox/Research/Bond Indexing/Data/Build/inputs/bond_monthly_return_series.dta"
+linking_file = "C:/Users/SOVICHD/Dropbox/Research/Bond Indexing/Data/Build/inputs/bond_cusip_permno_linking_table.dta"
+
+#Load the TRACE dataset with CRSP and Compustat identifiers
+trace_df = rWRDS.get_merged_trace_yield_panel( wrds, trace_yield_path_dta = yield_file, trace_linking_path_dta = linking_file )
+
+#Filter to appropriate dates
+trace_df = trace_df %>%
+   filter( archive >= 200208,
+           archive <= 201712 )
+
+```
+
+Summarize the data for each month:
+
+```{r}
+
+#General data summary for observations
+summary_df = trace_df %>%
+   group_by( archive ) %>%
+   summarise( obs_all = n(),
+              obs_retom = sum( !is.na(ret_eom) ),
+              obs_yield = sum( !is.na(yield_use) ) )
+
+#CRSP and Compustat summary for non-missing yield observations
+crsp_comp_df = trace_df %>%
+   filter( !is.na( yield_use ) ) %>%
+   group_by( archive ) %>%
+   summarise( obs_yield = n(),
+              obs_crsp = sum( !is.na( permno ) ),
+              obs_comp = sum( !is.na( gvkey ) ),
+              pct_crsp = obs_crsp / obs_yield,
+              pct_comp = obs_comp / obs_yield,
+              num_permno = n_distinct( permno ),
+              num_gvkey = n_distinct( gvkey ) )
+
+#Number of bonds per gvkey for year 2017
+bond_summary_df = trace_df %>%
+   filter( !is.na( yield_use ),
+           floor(archive/100) == 2017,
+           !is.na(permno) ) %>%
+   group_by( permno ) %>%
+   summarise( num_distinct_cusips = n_distinct( cusip ) )
+
+```
+
+Plot the summaries of observations:
+
+```{r, include = FALSE}
+
+#Melt the summary_df down for plotting
+summary_plot = summary_df %>%
+   arrange( archive ) %>%
+   mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+   melt( id.vars = c("t_index", "archive") ) %>%
+   dplyr::rename( Series = variable, observations = value )
+
+#Melt the crsp_comp_df down for plotting
+crsp_comp_plot = crsp_comp_df %>%
+   arrange( archive ) %>%
+   mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+   melt( id.vars = c("t_index", "archive") ) %>%
+   dplyr::rename( Series = variable, observations = value )
+
+#Graphing parameters of archives
+break_points = summary_df %>% filter( archive %% floor( archive / 100 ) %in% c(6,12) )
+
+#Create plot of raw observations
+gg1 = ggplot( data = summary_plot ) + 
+   geom_line( aes( x = t_index, y = observations, colour = Series ) ) + theme_bw() +
+   scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive ) + 
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "TRACE Monthly Panel Observation Counts",
+         x = "Month",
+         y = "Observations") 
+
+#Create plot of matches to CRSp and Compustat
+gg2 = ggplot( data = crsp_comp_plot %>% filter( Series %in% c("obs_yield", "obs_comp", "obs_crsp") ) ) + 
+   geom_line( aes( x = t_index, y = observations, colour = Series ) ) + theme_bw() +
+   scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive ) + 
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "Number of Populated Yield Observations Matched to CRSP and Compustat",
+         x = "Month",
+         y = "Observations") 
+
+#Create plot of matches to CRSp and Compustat
+gg3 = ggplot( data = crsp_comp_plot %>% filter( Series %in% c("num_permno", "num_gvkey") ) ) + 
+   geom_line( aes( x = t_index, y = observations, colour = Series ) ) + theme_bw() +
+   scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive ) + 
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "Number of unique PERMNOs and GVKEYs with TRACE data per month",
+         x = "Month",
+         y = "Observations") 
+
+```
+
+```{r, echo=FALSE}
+
+#Number of observations per month
+gg1 
+
+#Matches to Compustat and CRSP
+gg2
+
+#Number of GVKEYs and PERMNOs each month
+gg3
+
+```
+
+Display the distribution of cusips per gvkey (Note: will have to remove observations with insane number of bonds because could be potential data errors):
+
+```{r}
+
+length(unique(bond_summary_df$gvkey))
+table(bond_summary_df$num_distinct_cusips)
+
+```
+
+# Mergent-CRSP linking table
+
+Begin by loading the TRACE-CRSP linking table:
+
+```{r}
+
+#Load the data
+linking_file = "C:/Users/SOVICHD/Dropbox/Research/Bond Indexing/Data/Build/inputs/bond_cusip_permno_linking_table.dta"
+link_df = as.tibble(read.dta( file = linking_file ))
+
+```
+
+Now transform the TRACE-CRSP linking table into a Mergent-CRSP linking table at the issuer_id level:
+
+```{r}
+
+#Transform to Mergent-CRSP linking table
+link_df = rWRDS.mergent_crsp_link_table(wrds, link_df)
+
+```
+
+Summarize the file:
+
+```{r}
+
+#Number of unique issuer_ids and permnos with links
+length(unique(link_df$issuer_id))
+length(unique(link_df$permno))
+
+#Distribution of number of permnos per issuerid
+count_df = link_df %>%
+   group_by( issuer_id ) %>%
+   summarise( num_permnos = n_distinct( permno ) )
+table(count_df$num_permnos)
+
+#Distribution per issuerids per PERMNO (may need to remove some)
+dist_df = link_df %>%
+   group_by( permno ) %>%
+   summarise( num_issuers = n_distinct( issuer_id ) ) 
+table(dist_df$num_issuers)
+
+```
+
+# Mergent-CRSP-Compustat new issuance monthly matches:
+
+## Vanilla corporates
+
+Download the Mergent vanilla corporate (i.e., fixed rate, non-convertible) new issuance data and merge on CRSP-Compustat links:
+
+```{r, warning=FALSE, results = "hide", message=FALSE, cache = TRUE}
+
+#Download vanilla corporate new issuance data
+vanilla_df = rWRDS.get_mergent_corporate_issues( wrds, begin_year = 2003, end_year = 2017 )
+
+#Merge on the CRSP and Compustat identifiers
+vanilla_df = rWRDS.mergent_add_links( wrds, bond_df = vanilla_df, mergent_link_df = link_df )
+
+```
+
+Static summary of the matches for vanilla corporates (will be strictly less than the actual links):
+
+```{r}
+
+#Match quality overall 
+table(is.na(vanilla_df$permno))
+
+#PERMNOs issuing vanilla corporates
+length(unique(vanilla_df$permno))
+
+#GVKEYs issuing vanilla corporates
+length(unique(vanilla_df$gvkey))
+
+```
+
+Summarize the vanilla corporate data for each year:
+
+```{r}
+
+#Summarize the data for each year
+summary_df = vanilla_df %>%
+   group_by( offering_year ) %>%
+   summarise( obs_all = n(),
+              obs_crsp = sum( !is.na( permno ) ),
+              obs_comp = sum( !is.na( gvkey ) ),
+              num_permno = n_distinct( permno ),
+              num_gvkey = n_distinct( gvkey ) ) 
+
+```
+
+Plot the summaries of observations:
+
+```{r, include = FALSE}
+
+#Melt the summary_df down for plotting
+summary_plot = summary_df %>%
+   melt( id.vars = c("offering_year") ) %>%
+   dplyr::rename( Series = variable, observations = value )
+
+#Create plot of matches to CRSp and Compustat
+gg4 = ggplot( data = summary_plot %>% filter( Series %in% c("obs_all", "obs_comp", "obs_crsp") ) ) + 
+   geom_line( aes( x = offering_year, y = observations, colour = Series ) ) + theme_bw() +
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "Number of new issuances and matches to CRSP and Compustat",
+         x = "Year",
+         y = "Observations") 
+
+#Create plot of matches to CRSp and Compustat
+gg5 = ggplot( data = summary_plot %>% filter( Series %in% c("num_permno", "num_gvkey") ) ) + 
+   geom_line( aes( x = offering_year, y = observations, colour = Series ) ) + theme_bw() +
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "Unique PERMNOs and GVKEYs per issuance year",
+         x = "Year",
+         y = "Observations") 
+
+```
+
+```{r, echo=FALSE}
+
+#Number of observations per year
+gg4 
+
+#Number of GVKEYs and PERMNOs with bond issuance each year
+gg5
+
+```
+
+## All corporates
+
+Download the Mergent vanilla corporate (i.e., fixed rate, non-convertible) new issuance data and merge on CRSP-Compustat links:
+
+```{r, warning=FALSE, results = "hide", message=FALSE, cache = TRUE}
+
+#Download all corporate new issuance data
+bond_df = rWRDS.get_mergent_corporate_issues( wrds, begin_year = 2003, end_year = 2017, bond_filter = FALSE )
+
+#Merge on the CRSP and Compustat identifiers
+bond_df = rWRDS.mergent_add_links( wrds, bond_df = bond_df, mergent_link_df = link_df )
+
+```
+
+Static summary of the matches for vanilla corporates (will be strictly less than the actual links):
+
+```{r}
+
+#Match quality overall 
+table(is.na(bond_df$permno))
+
+#PERMNOs issuing vanilla corporates
+length(unique(bond_df$permno))
+
+#GVKEYs issuing vanilla corporates
+length(unique(bond_df$gvkey))
+
+```
+
+Summarize the vanilla corporate data for each year:
+
+```{r}
+
+#Summarize the data for each year
+summary_df = bond_df %>%
+   group_by( offering_year ) %>%
+   summarise( obs_all = n(),
+              obs_crsp = sum( !is.na( permno ) ),
+              obs_comp = sum( !is.na( gvkey ) ),
+              num_permno = n_distinct( permno ),
+              num_gvkey = n_distinct( gvkey ) ) 
+
+```
+
+Plot the summaries of observations:
+
+```{r, include = FALSE}
+
+#Melt the summary_df down for plotting
+summary_plot = summary_df %>%
+   melt( id.vars = c("offering_year") ) %>%
+   dplyr::rename( Series = variable, observations = value )
+
+#Create plot of matches to CRSp and Compustat
+gg6 = ggplot( data = summary_plot %>% filter( Series %in% c("obs_all", "obs_comp", "obs_crsp") ) ) + 
+   geom_line( aes( x = offering_year, y = observations, colour = Series ) ) + theme_bw() +
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "Number of new issuances and matches to CRSP and Compustat",
+         x = "Year",
+         y = "Observations") 
+
+#Create plot of matches to CRSp and Compustat
+gg7 = ggplot( data = summary_plot %>% filter( Series %in% c("num_permno", "num_gvkey") ) ) + 
+   geom_line( aes( x = offering_year, y = observations, colour = Series ) ) + theme_bw() +
+   theme( axis.text.x = element_text( angle = 90, hjust = 1 ) ) + 
+   labs( title = "Unique PERMNOs and GVKEYs per issuance year",
+         x = "Year",
+         y = "Observations") 
+
+```
+
+```{r, echo=FALSE}
+
+#Number of observations per year
+gg6 
+
+#Number of GVKEYs and PERMNOs with bond issuance each year
+gg7
+
+```

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552250311817.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D358672B",
+    "lastKnownWriteTime" : 1547687493,
+    "last_content_update" : 1547687493,
+    "path" : "C:/Users/dsovich/Dropbox/Unemployment Insurance Credit Supply/Code/Unemployment_Insurance_Schedules/process_eb_euc_and_regular_benefits_smoothed.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "359,30",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 13,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

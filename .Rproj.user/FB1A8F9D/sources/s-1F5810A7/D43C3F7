@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552058561664.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D43C3F7",
+    "lastKnownWriteTime" : 1552062217,
+    "last_content_update" : 1552508612343,
+    "path" : "C:/Users/dsovich/Dropbox/Programming/Packages/blsr/R/jolts.R",
+    "project_path" : "R/jolts.R",
+    "properties" : {
+        "cursorPosition" : "48,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

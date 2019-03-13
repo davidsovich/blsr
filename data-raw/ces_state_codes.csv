@@ -1,0 +1,54 @@
+state_number,state_code,description,state_id,in_us_flag
+01,0100000 ,Alabama,AL,1
+02,0200000 ,Alaska,AK,1
+04,0400000 ,Arizona,AZ,1
+05,0500000 ,Arkansas,AR,1
+06,0600000 ,California,CA,1
+08,0800000 ,Colorado,CO,1
+09,0900000 ,Connecticut,CT,1
+10,1000000 ,Delaware,DE,1
+11,1100000 ,District of Columbia,DC,1
+12,1200000 ,Florida,FL,1
+13,1300000 ,Georgia,GA,1
+15,1500000 ,Hawaii,HI,1
+16,1600000 ,Idaho,ID,1
+17,1700000 ,Illinois,IL,1
+18,1800000 ,Indiana,IN,1
+19,1900000 ,Iowa,IA,1
+20,2000000 ,Kansas,KS,1
+21,2100000 ,Kentucky,KY,1
+22,2200000 ,Louisiana,LA,1
+23,2300000 ,Maine,ME,1
+24,2400000 ,Maryland,MD,1
+25,2500000 ,Massachusetts,MA,1
+26,2600000 ,Michigan,MI,1
+27,2700000 ,Minnesota,MN,1
+28,2800000 ,Mississippi,MS,1
+29,2900000 ,Missouri,MO,1
+30,3000000 ,Montana,MT,1
+31,3100000 ,Nebraska,NE,1
+32,3200000 ,Nevada,NV,1
+33,3300000 ,New Hampshire,NH,1
+34,3400000 ,New Jersey,NJ,1
+35,3500000 ,New Mexico,NM,1
+36,3600000 ,New York,NY,1
+37,3700000 ,North Carolina,NC,1
+38,3800000 ,North Dakota,ND,1
+39,3900000 ,Ohio,OH,1
+40,4000000 ,Oklahoma,OK,1
+41,4100000 ,Oregon,OR,1
+42,4200000 ,Pennsylvania,PA,1
+44,4400000 ,Rhode Island,RI,1
+45,4500000 ,South Carolina,SC,1
+46,4600000 ,South Dakota,SD,1
+47,4700000 ,Tennessee,TN,1
+48,4800000 ,Texas,TX,1
+49,4900000 ,Utah,UT,1
+50,5000000 ,Vermont,VT,1
+51,5100000 ,Virginia,VA,1
+53,5300000 ,Washington,WA,1
+54,5400000 ,West Virginia,WV,1
+55,5500000 ,Wisconsin,WI,1
+56,5600000 ,Wyoming,WY,1
+72,7200000 ,Puerto Rico,PR,0
+78,7800000 ,Virgin Islands,VI,0

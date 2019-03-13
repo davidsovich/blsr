@@ -1,0 +1,16 @@
+Package: blsr
+Type: Package
+Title: Accessing and manipulating Bureau of Labor Statistics and NAICS data from R. 
+Version: 0.1.0
+Authors@R: person("David", "Sovich", email = "dsovich@wustl.edu",
+  role = c("aut", "cre"))
+Description: A set of functions for remotely accessing and manipulating BLS data from R. It contains libraries of functions for data from the Current Employment Statistics (CES) survey, the Job Openings and Labor Turnover Survey (JOLTS), and the Quarterly Census of Employment and Wages (QCEW), and the NAICS supersector mapping. 
+License: MIT 
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    dplyr,
+    reshape2,
+    blscrapeR,
+    lubridate
+RoxygenNote: 6.1.1

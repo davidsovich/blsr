@@ -1,0 +1,332 @@
+---
+title: "BLS"
+author: "David Sovich"
+date: "February 22, 2019"
+output:
+  html_document:
+    self_contained: no
+    number_sections: true
+    highlight: pygments
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: default
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document describes how to remotely extract and manipulate data from the Bureua of Labor Statistics (BLS) using the `blscrapeR` and `bls_data` packages in R. 
+
+# Background
+
+`blscrapeR` is an excellent package that provides a tidy API wrapper for the Bureau of Labor Statistics (BLS). Documentation on the latest version can be found at: <https://github.com/keberwein/blscrapeR>. To install the latest version of `blscrapeR`, enter the following command (requires devtools): 
+
+```{r, eval = FALSE}
+
+devtools::install_github("keberwein/blscrapeR")
+
+```
+
+`bls_data` contains additional functions for working with some of the most popular BLS datasets, including the Current Employment Statistics (CES), Quarterly Census of Wages and Employment (QCEW), and the Job Opening and Labor Turnover Survey (JOLTS). To install the latest version of `blscrapeR`, enter the following command: 
+
+```{r, eval = FALSE}
+
+devtools::install_github("davidsovich/bls_data")
+
+```
+
+Note: The package is currently not functional yet. Instead, load the source code of all the functions and declare the BLS metadata directory:
+
+```{r}
+
+#Load source code
+source("C:/Users/SOVICHD/Dropbox/Programming/rBLS/Code/bls_functions.R")
+
+#Declare directory where BLS metadata is stored
+bls_dir = "C:/Users/SOVICHD/Dropbox/Data/BLS/"
+
+```
+
+You will want to acquire a free API key from the BLS when remotely working with BLS data. The API key increases your query limits and expands your data access. For more information on the API key (and query limits with-and-whout the key), please see the documentation for `blscrapeR`. 
+
+You will also want to load the `tidyverse` package to optimally use `blscrapeR`:
+
+```{r, warning=FALSE, results = "hide", message=FALSE}
+
+library(tidyverse)
+library(blscrapeR)
+
+```
+
+# Querying the BLS data using blscrapeR
+
+BLS datasets are identified by series IDs. We can extract up to 20 years of data on one-or-more series IDs using the `bls_api` function from the `blscrapeR` package. 
+
+For example, the below code retrieves monthly non-farm payroll figures from 2000 to 2019. I retrieve both seasonally adjusted (`CES0000000001`) and unadjusted (`CEU0000000001`) figures:
+
+```{r}
+
+nfp_df = bls_api(c("CES0000000001", "CEU0000000001"),
+                  startyear = 1920,
+                  endyear = 1939,
+                  Sys.getenv("BLS_KEY")) %>%
+   dateCast()
+
+head(nfp_df)
+table(nfp_df$seriesID)
+
+```
+
+More general information for constructing series ID strings can be found at: <https://www.bls.gov/help/hlpforma.htm>. Specific information on the main BLS datasets is provided in the following subsection. 
+
+# Dealing with Specific Datasets
+
+
+## CES 
+
+### Description
+
+The Current Employment Statistics (CES) survey produces monthly estimates of employment, hours, and earnings. CES data is commonly used to measure the health of the U.S. ceconomy. More information about the CES is available at: <https://www.bls.gov/web/empsit/cesfaq.htm>. 
+
+CES estiamtes are available at the national, NAICS sector, state, and major metropolitan levels (along with interactions). The data is available from the API from January 1939 to present day. Seasonally and non-seasonally adjusted estimates are available.
+
+CES employment estimates are based on a survey of approximately 142,000 businesses and government worksites representing approximately 689,000 worksites throughout the U.S. The reference period for the survey is the pay period which includes the 12th day of the month; figures are normally released on the third Friday after the conclusion of the reference period. 
+
+Measurements undergo the normal BLS revision process due to the survey-based method of calcuation. Unadjusted estimates are revised to reflect to actual employment figures from the QCEW. Seasonally adjusted estimates undergo similar revisions. 
+
+### Functions for national data
+
+National CES data can be retrieved from the BLS API using the appropriate series ID strings.  To see the required structure for national CES series ID's, extract the `series_id_map` component of the `get_jolts_codes()` object from the `bls_data` package:
+
+```{r}
+
+#Get CES codes metadata
+ces_codes = ces.get_codes(bls_dir, national_or_state_data = "national")
+
+#Print series ID structure
+ces_codes$series_id_map
+
+```
+
+This object also contains several other types of metadata useful for constructing series IDs:
+
+```{r}
+
+names(ces_codes)
+
+```
+
+For example, to retrive the monthly number of seasonally adjusted non-farm hires, we need to use the series ID `CES0000000001`. 
+
+The `ces.create_national_series()` function allows you to quickly create a vector of CES series ID's for national data. Below I gather the series IDs for seasonally adjusted employment for each NAICS supersector in the private sector: 
+
+```{r}
+
+# Get the Series ID Parameters for Industry Wages
+adjustment = "U"
+industry = filter(ces_codes$industry_codes,
+                  level == 2, 
+                  private_sector_flag == 1)$industry_code
+
+
+#Declare series ID parameters
+adjustment = "S"
+industry = filter(ces_codes$industry_codes,
+                   level == 2,
+                   private_sector_flag == 1 )$industry_code
+data_type = c("03","11")
+
+#Create CES series ID strings
+series_pull = ces.create_national_series(adjustment = "U",
+                                         industry = industry, 
+                                         data_type = data_type)
+series_pull
+
+```
+
+To download the data, provide the strings as inputs to the `bls_api()` function:
+
+```{r}
+   
+ces_df = bls_api(series_pull, 
+                 startyear = 2007,
+                 endyear = 2019,
+                 Sys.getenv("BLS_KEY")) %>%
+      dateCast()
+
+# Clean up the file
+ces_df = ces_df %>% 
+   mutate(archive = year(date)*100+month(date),
+          indu = substr(seriesID,4,11),
+          data_type = substr(seriesID,12,13),
+          data_value = ifelse(data_type == "03", "avg_hrly", "avg_weekly"))
+
+
+temp_df = ces_df %>%
+   inner_join( filter(ces_codes$industry_codes, level == 2) %>% dplyr::select( industry_code, description),
+               by = c("indu"="industry_code"))
+
+
+temp_df = temp_df %>% dplyr::select(archive, value, data_value, description)
+
+readr::write_csv(temp_df, path = paste0(bls_dir, "indu_bls_data.csv"))
+
+
+```
+
+Add metadata identifiers to the retrieved data using the `ces.add_ids()` function:
+
+```{r}
+
+#ces_df = ces.add_ids(bls_dir, ces_df)
+#head(ces_df)
+
+```
+
+### Functions for state data
+
+State CES data can be retrieved using the same functions by changing the national parameters to state paramters:  
+
+```{r}
+
+#Get CES codes metadata
+ces_codes = ces.get_codes(bls_dir, national_or_state_data = "state")
+
+#Print series ID structure
+ces_codes$series_id_map
+
+#Print the available states
+head(ces_codes$state_codes)
+
+```
+
+For example, the below code downloads monthly employment (seasonally adjusted) for the 50 U.S. states without D.C.:
+
+```{r}
+
+#Declare series ID parameters
+adjustment = "S"
+industry = filter(ces_codes$industry_codes, level == 0 )$industry_code
+states = filter(ces_codes$state_codes, in_us_flag == 1, description != "District of Columbia")$state_code
+data_type = c("01")
+
+#Create CES series ID strings
+series_pull = ces.create_state_series(adjustment = "S",
+                                      industry = industry,
+                                      states = states,
+                                      data_type = data_type)
+
+
+#Download the data
+ces_df = bls_api(series_pull,
+                 startyear = 2000,
+                 endyear = 2010,
+                 Sys.getenv("BLS_KEY"))
+
+```
+
+
+## JOLTS
+
+### Description
+
+The Job Openings and Labor Turnover Survey (JOLTS) produces monthly estimates of job openings, hires, quits, layoffs and discharges, and other separations. JOLTS data is commonly used to help measure the demand for labor. More information about JOLTS is avaiable at: <https://www.bls.gov/jlt/jltprovq.htm>. 
+
+JOLTS estimates are available at the aggregate, NAICS sector, and geographic region levels (along with interactions). The data is available via API from December 2000 to present day. Seasonally and non-seasonally adjusted estimates are available.
+
+Job openings in the JOLTS data are measured as of the last business day of the month. Hires and separations are measured for the entire calendar month. Measurements undergo the normal BLS revision process due to the survey-based method of calcuation. 
+
+### Functions
+
+JOLTS data can be retrieved from the BLS API using the appropriate sereis ID strings.  To see the required structure for JOLTS series ID's, extract the `series_id_map` component of the `get_jolts_codes()` object from the `bls_data` package:
+
+```{r}
+
+#Get JOLTS codes metadata
+jolts_codes = get_jolts_codes(bls_dir)
+
+#Print series ID structure
+jolts_codes$series_id_map
+
+```
+
+This object also contains several other types of metadata useful for constructing series IDs:
+
+```{r}
+
+#Avalable metadata
+names(jolts_codes)
+
+#List of available industries (note: keep aggregation levels consistent)
+head(jolts_codes$indu_codes)
+
+#List of available variables
+jolts_codes$element_codes
+
+#List of available geographic regions
+jolts_codes$region_codes
+
+```
+
+For example, to retrive the monthly number of seasonally adjusted non-farm hires, we need to use the series ID `JTS00000000HIL`. 
+
+The `create_jolts_series()` function allows you to quickly create a vector of JOLTS series ID's based on your parameter choices. Below I use `create_jolts_series()` to gather the strings for seasonally adjusted hiring, openings, and separations for each NAICS supersector: 
+
+```{r}
+
+#Declare series ID parameters
+adjustment = "S"
+industry = filter(jolts_codes$indu_codes, level == 2)$industry_code #supsersector level
+region = "00"
+data_element = c("HI", "JO", "TS")
+output = "L"
+
+#Create JOLTS series ID strings
+series_pull = create_jolts_series(adjustment = adjustment, 
+                                  industry = industry,
+                                  region = region,
+                                  data_element = data_element,
+                                  output = output)
+
+```
+
+To download the data, provide the strings as inputs to the `bls_api()` function:
+
+```{r}
+   
+jolts_df = bls_api(series_pull, 
+                   startyear = 2001,
+                   endyear = 2010,
+                   Sys.getenv("BLS_KEY")) %>%
+      dateCast()
+
+#Summarize the data
+table(jolts_df$seriesID)
+table(jolts_df$date)
+
+```
+
+Add metadata identifiers to the retrieved data using the `add_jolts_ids()` function:
+
+```{r}
+
+jolts_df = add_jolts_ids(bls_dir, jolts_df)
+head(jolts_df)
+
+```
+
+## Wage Growth
+
+Wage growth statistics are found on the Atlanta Fed webstite: 
+
+<https://www.frbatlanta.org/chcs/wage-growth-tracker.aspx>.
+
+
+
+## QCEW
+
+
+For QCEW data slices see: <https://data.bls.gov/cew/doc/access/csv_data_slices.htm#INDUSTRY_SLICES>. 

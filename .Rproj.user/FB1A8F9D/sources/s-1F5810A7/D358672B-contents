@@ -1,0 +1,935 @@
+#Load Packages
+library(tidyverse)
+library(sqldf)
+library(reshape2)
+source("C:/Users/SOVICHD/Dropbox/Programming/rFunctions/rFunctions.R")
+
+#This File Processes the Raw EB, EUC, and Regular Benefit Data Into a Panel From 2005 -> 2018 and Summarizes the Data from 200701 to 201412. 
+#The file also creates plots of the benefit weeks over time for highlighting the source of variation being exploited. 
+
+#Specify Minimum and Maximum Plot Dates
+archive_limits = c(200701, 201412)
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                    CREATE THE EB AND EUC DATASETS                                                                     #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Declare the Directory of Interest
+data_dir = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Data/EB and EUC/csvs/"
+
+#Expand Out the Potential Archives Between 2005 and 2018
+archives = sort(apply(expand.grid(c(2005:2018), c(1:12)),1, function(x){ x[1]*100+x[2] }))
+
+#Extract List of States and Remove States You Do Not Want - Continental US Ex-DC
+state_list = unique(read.csv(file = paste0(data_dir, "eb_summary_csv.csv"), stringsAsFactors = FALSE)$state)
+state_list = sort(state_list[ !(state_list %in% c("VI", "PR", "DC", "AK", "HI")) ])
+
+#Initialize the EB and EUC Data Frame
+eb_euc_df = data.frame(expand.grid( state_list, archives, stringsAsFactors = FALSE), stringsAsFactors = FALSE) %>% dplyr::rename( state = Var1, archive = Var2)
+
+#Load and Process the Extended Benefits Data for 2005-2018 and Make Correction for 2010-06 and 2010-07
+if(TRUE){
+   
+   #Load Extended Benefits Data
+   eb_data = read.csv(file = paste0(data_dir, "eb_summary_csv.csv"), stringsAsFactors = FALSE) %>% 
+             filter( !duplicated( paste0(state, "_", archive) ) )
+   
+   #Merge on EB Data
+   eb_euc_df = sqldf("SELECT a.*, b.eb_weeks FROM eb_euc_df AS a LEFT JOIN eb_data AS b ON a.state = b.state AND a.archive = b.archive") %>%
+               mutate( eb_weeks = ifelse( is.na(eb_weeks), 0, eb_weeks ))
+   
+   #EB "Bad Months": Make Correction for 2010-06 and 2012-08 (Use the Lag) and 2010-07 and 2012-09 (Use the Lead) [ Not Really Bad Months; Just Want to Use Smoothed Series ]
+   eb_euc_df = eb_euc_df %>% group_by( state ) %>%
+                             mutate( lag_weeks = lag( eb_weeks, order_by = archive ),
+                                     lead_weeks = lead( eb_weeks, order_by = archive ),
+                                     lag_archive = lag( archive, order_by = archive ) ) %>%
+                             ungroup() %>%
+                             mutate( eb_weeks = ifelse( archive %in% c(201006, 201208), lag_weeks,
+                                                ifelse( archive %in% c(201007, 201209), lead_weeks, eb_weeks ) ) ) %>%
+                             data.frame() %>%
+                             dplyr::select( -one_of(c("lag_weeks", "lead_weeks")) )
+   
+   #EB Correction: Remove "Katrina Months" for Louisiana and the Gulf prior to 200806
+   eb_euc_df = eb_euc_df %>% mutate( eb_weeks = ifelse( archive < 200806, 0, eb_weeks ) )
+   
+}
+
+#Load and Process the Emergency Unemployment Compensation Benefits for 2008-2014
+if(TRUE){
+   
+   #Loaded Emergency Benefits Data
+   euc_data = read.csv(file = paste0(data_dir, "euc_summary_csv.csv"), stringsAsFactors = FALSE)
+   
+   #Merge on the EUC Data
+   eb_euc_df = sqldf(paste("SELECT a.*, b.tier_one_weeks, b.tier_two_weeks, b.tier_three_weeks, b.tier_four_weeks",
+                           "FROM eb_euc_df AS a LEFT JOIN euc_data AS b ON a.state = b.state AND a.archive = b.archive"))
+   
+   #Clean Data and Create Summary of Total EUC Benefits
+   eb_euc_df = eb_euc_df %>% mutate( tier_one_weeks = ifelse( is.na(tier_one_weeks), 0, tier_one_weeks ), tier_two_weeks = ifelse( is.na(tier_two_weeks), 0, tier_two_weeks ), 
+                                     tier_three_weeks = ifelse( is.na(tier_three_weeks), 0, tier_three_weeks ), tier_four_weeks = ifelse( is.na(tier_four_weeks), 0, tier_four_weeks ) )
+                                     
+   
+   #EUC "Bad Months": Make Correction for 2010-06 (Use the Lag) and 2010-07 (Use the Lead) [ Truly Bad Months with Retroactive Effects ]
+   eb_euc_df = eb_euc_df %>% group_by( state ) %>%
+                             mutate( lag_t1 = lag( tier_one_weeks, order_by = archive ), lead_t1 = lead( tier_one_weeks, order_by = archive ),
+                                     lag_t2 = lag( tier_two_weeks, order_by = archive ), lead_t2 = lead( tier_two_weeks, order_by = archive ),
+                                     lag_t3 = lag( tier_three_weeks, order_by = archive ), lead_t3 = lead( tier_three_weeks, order_by = archive ),
+                                     lag_t4 = lag( tier_four_weeks, order_by = archive ), lead_t4 = lead( tier_four_weeks, order_by = archive ) ) %>%
+                             ungroup() %>%
+                             mutate( tier_one_weeks = ifelse( archive == 201006, lag_t1, ifelse( archive == 201007, lead_t1, tier_one_weeks ) ),
+                                     tier_two_weeks = ifelse( archive == 201006, lag_t2, ifelse( archive == 201007, lead_t2, tier_two_weeks ) ),
+                                     tier_three_weeks = ifelse( archive == 201006, lag_t3, ifelse( archive == 201007, lead_t3, tier_three_weeks ) ),
+                                     tier_four_weeks = ifelse( archive == 201006, lag_t4, ifelse( archive == 201007, lead_t4, tier_four_weeks ) ) ) %>%
+                             dplyr::select( -one_of(c("lag_t1", "lead_t1","lag_t2", "lead_t2","lag_t3", "lead_t3","lag_t4", "lead_t4")) )
+   
+   #Additional EUC "Bad Months": 2012-02 - 2012-05 (states in Tier 4 Ineligible for EB Could Claim 16 Tier 4 Weeks Instead of 6; But Should Show Up in EB)
+   eb_euc_df = eb_euc_df %>% mutate( tier_four_weeks = ifelse( tier_four_weeks > 6, 6, tier_four_weeks ) )
+   
+   #Final EUC "Bad Months": No Trigger Notices Were Given in 2008-06-2008-10; But there were 13 EUC Weeks Available to Every State!
+   eb_euc_df = eb_euc_df %>% mutate( tier_one_weeks = ifelse( archive <= 200810 & archive >= 200806, 13, tier_one_weeks ) )
+   
+   #Calculate Total Weeks of EUC Benefits
+   eb_euc_df = eb_euc_df %>% mutate( euc_weeks = tier_one_weeks + tier_two_weeks + tier_three_weeks + tier_four_weeks )
+   
+}
+
+#Create Summary Measures and Save Data
+if(TRUE){
+   
+   #Calculate Total Weeks Related to Recession-Era Unemployment Insurance
+   eb_euc_df = eb_euc_df %>% mutate( eb_euc_weeks = eb_weeks + euc_weeks )
+   
+   #Save the Data
+   save( eb_euc_df, file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Data/EB and EUC/Rda Output Files/eb_euc_df.Rda")
+   
+}
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                 MERGE ON THE REGULAR UI BENEFITS                                                                      #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Declare the Directory of Interest
+regular_data_dir = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Data/Unemployment Insurance Schedules/csvs/"
+
+#Load the EB and EUC Data Frame from Above
+eb_euc_df = get(load(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Data/EB and EUC/Rda Output Files/eb_euc_df.Rda"))
+
+#Load the Regular UI Benefits and Extended UI Benefits Data and Merge Onto the UI Data Frame
+if(TRUE){
+   
+   #Load the Regular UI Benefits (Annual Data for the LEFT JOIN)
+   reg_benefits = read.csv(file = paste0(regular_data_dir, "ui_schedules_2005_2018_csv.csv"), stringsAsFactors = FALSE)
+   
+   #Merge on Regular Benefits
+   ui_df = sqldf(paste("SELECT a.*, b.max_ben AS max_wkly_ben, b.max_weeks AS regular_max_weeks",
+                       "FROM eb_euc_df AS a INNER JOIN reg_benefits AS b",
+                       "ON (a.state = b.state_code) AND (FLOOR(a.archive/100) = b.year)"))
+   
+   #Check For Errors in Merging
+   apply(ui_df, 2, function(x){ sum(is.na(x) ) } )
+   
+   #Calculate the Final Variables for the Analysis
+   ui_df = ui_df %>% mutate( total_ui_weeks = regular_max_weeks + eb_weeks + euc_weeks, 
+                             total_extended_weeks = euc_weeks + eb_weeks,
+                             max_regular_benefits = max_wkly_ben*regular_max_weeks, 
+                             max_total_benefits = max_wkly_ben*total_ui_weeks, 
+                             max_extended_benefits = max_wkly_ben*total_extended_weeks)
+   
+   #Summarize the Data Quickly to Check for Errors
+   summary(ui_df[ , c("total_ui_weeks", "total_extended_weeks", "max_total_benefits", "max_extended_benefits", "euc_weeks", "eb_weeks") ] )
+   
+}
+
+#Save the Data
+save(ui_df, file = paste0(regular_data_dir, "ui_df.Rda"))
+write.csv(ui_df, file = paste0(regular_data_dir, "ui_df.csv"))
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                       SUMMARY STATISTICS                                                                              #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Declare the Directory of Interest
+regular_data_dir = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Data/Unemployment Insurance Schedules/csvs/"
+table_dir = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Tables/Descriptive_Stats/Unemployment_Insurance/"
+
+#Load the Data
+ui_df = get(load(file = paste0(regular_data_dir, "ui_df.Rda"))) %>% filter( archive >= archive_limits[1], archive <= archive_limits[2] ) 
+
+#Descriptive Statistics on Benefit Amounts
+if(TRUE){
+   
+   #Choose the Variables to Describe
+   var_list = c("regular_max_weeks", "max_wkly_ben", "max_regular_benefits", "eb_weeks", "euc_weeks", "eb_euc_weeks", "total_ui_weeks", "max_total_benefits")
+   
+   #Panel Data Descriptive Statistics
+   write.csv( descr_stats( ui_df, var_list ), file = paste0(table_dir, "ui_descr_stats_", archive_limits[1], "_", archive_limits[2], ".csv") )
+   
+   #Cross-Section Descriptive Statistics at Height of Recession
+   write.csv( descr_stats( ui_df %>% filter( archive == 201106 ), var_list ), file = paste0(table_dir, "ui_descr_stats_201106_height_of_extensions.csv") )
+   
+}
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                       PLOT THE AMOUNTS OVER TIME                                                                      #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Declare the Directory of Interest
+regular_data_dir = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Data/Unemployment Insurance Schedules/csvs/"
+
+#Load the Data and Create Hsu et al. (2018) Equivalent Weeks
+ui_df = get(load(file = paste0(regular_data_dir, "ui_df.Rda"))) %>%
+        mutate( hsu_eb_federal = ifelse( eb_weeks > 0, eb_weeks - 13, eb_weeks ),
+                hsu_extended_federal = hsu_eb_federal + euc_weeks )
+
+#Average Number of Extended Weeks Per Year and Per Semiannual Period Across States
+if(TRUE){
+   
+   #Calculate the Average Amount Over States Per Year
+   avg_by_year = ui_df %>% group_by( floor(archive/100) ) %>% summarise( avg_ext_weeks = mean( total_extended_weeks ),
+                                                                         avg_hsu_weeks = mean( hsu_extended_federal) )
+   
+   #Calculate the Average Amount Over States Per Semiannual Period
+   avg_by_archive = ui_df %>% mutate( sa_period = ifelse( archive %% 100 <= 6, floor(archive/100)*100+01, floor(archive/100)*100+07) ) %>%
+                              group_by( sa_period ) %>% summarise( avg_ext_weeks = mean( total_extended_weeks ) )
+   
+}
+
+#Plots for EB and EUC Programs Only
+if(TRUE){
+   
+   #Regular and Extended Benefits: Maximum Amounts that Can be Claimed Each Month
+   if(TRUE){
+      
+      #Maximum Amounts by Year
+      max_by_arch = ui_df %>% group_by( archive ) %>% 
+                              mutate( grouping_ui_weeks = ifelse( total_ui_weeks > 99, 99, total_ui_weeks ) ) %>%
+                              summarise( max_weeks = max( grouping_ui_weeks ) ) %>%
+                              arrange( archive ) %>%
+                              mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+                              data.frame()
+      
+      #Plot: Maximum Amounts of Unemployment Insurance Over Time
+      if(TRUE){
+         
+         #Plot of EUC Tiers in the Data for Sample Period
+         plot_data = max_by_arch %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2] )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/max_weeks_over_time.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = max_weeks), position=position_jitter(w=0.5, h=0)) + theme_bw()
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + scale_y_continuous( limits = c(10,100) )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Maximum Possible Weeks of Unemployment Insurance Over Time",
+                           x = "Month", 
+                           y = "Maximum Weeks of Unemployment Insurance" )
+         gg1
+         dev.off()
+         
+         #Plot in Landscape Format
+         plot_data = max_by_arch %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2] )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/max_weeks_over_time_lscape.pdf", onefile=T,
+             width = 8, height = 6 )
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = max_weeks), position=position_jitter(w=0.5, h=0)) + theme_bw()
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + scale_y_continuous( limits = c(10,100) )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 45, hjust = 1, size = 16 ),
+                            axis.text.y = element_text( size = 16 ),
+                            axis.title.y = element_text( size = 16 ), 
+                            axis.title.x = element_blank() )
+         gg1 = gg1 + labs( y = "Maximum Diuration (Weeks)" )
+         gg1
+         dev.off()
+         
+      }
+      
+   }
+
+   #EB and EUC: Maximum Amounts that Can Be Claimed Each Month for Both EUC and EB + EUC Program
+   if(TRUE){
+      
+      #Summarize the Data to Take Maxes for Each Archive (Matches Up with the 73 Weeks!! Finally)
+      eb_euc_summary = ui_df %>% group_by( archive ) %>% 
+                                     summarize( TierOne = max( tier_one_weeks ),
+                                                TierTwo = max( tier_two_weeks ),
+                                                TierThree = max( tier_three_weeks ), 
+                                                TierFour = max( tier_four_weeks ), 
+                                                EUC = max( euc_weeks ),
+                                                EB = max( eb_weeks ),
+                                                EUCandEB = max( eb_euc_weeks ) ) %>%
+                                     arrange( archive ) %>%
+                                     mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+                                     data.frame()
+      
+      #Melt the Data
+      eb_euc_summary = melt( eb_euc_summary, id.vars = c("t_index", "archive") ) %>% dplyr::rename( Program = variable, weeks = value)
+      
+      #Two Plots: One for Maximum Values of Tiers of EUC Benefits and Other for Combined Max of EB and EUC
+      if(TRUE){
+         
+         #Plot of EUC Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Program %in% c("TierOne", "TierTwo", "TierThree", "TierFour")  )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/euc_program_max_weeks.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Program), position=position_jitter(w=0.5, h=0)) + theme_bw()
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Maximum Weeks for EUC Program",
+                           x = "Month", 
+                           y = "EUC Weeks" )
+         gg1
+         dev.off()
+         
+         #Plot of EB, EUC, and Combined EB and Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Program %in% c("EUC", "EB", "EUCandEB")  )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/eb_euc_program_max_weeks.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Program), position=position_jitter(w=0.6, h=0)) + theme_bw()
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Maximum Weeks for EB and EUC Programs",
+                           x = "Month", 
+                           y = "Maximum Extra Benefit Weeks" )
+         
+         gg1 = gg1 + scale_colour_manual( values = c("red", "blue", "purple"))
+         gg1
+         dev.off()
+         
+      }
+      
+   }
+
+   #EB and EUC: Comparison of 10th and 90th Percentiles of Total Weeks Each Month to Highlight Variation
+   if(TRUE){
+      
+      #Select the Variable of Interest
+      ui_df = ui_df %>% mutate( week_var = eb_euc_weeks + 26 )
+      
+      #Summarize the Data to Take Maxes for Each Archive (Matches Up with the 73 Weeks!! Finally)
+      eb_euc_summary = ui_df %>% 
+         group_by( archive ) %>%
+         summarize( p5 = quantile( week_var, 0.05 ),
+                    p25 = quantile( week_var, 0.25 ),
+                    p50 = quantile( week_var, 0.50 ),
+                    p75 = quantile( week_var, 0.75 ),
+                    p95 = quantile( week_var, 0.95 ) ) %>%
+         arrange( archive ) %>%
+         mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+         data.frame()
+      
+      #Melt the Data
+      eb_euc_summary = melt( eb_euc_summary, id.vars = c("t_index", "archive") ) %>% dplyr::rename( Percentile = variable, weeks = value )
+      
+      #Summarize the Values for Periods when Weeks are Positive
+      mean_vals = eb_euc_summary %>% filter( weeks > 0, archive <= 201312, archive >= 200801 ) %>% group_by( Percentile ) %>% summarize( mean_val = mean( weeks ) )
+      
+      #Two Plots: 10th and 90th Percentiles of the EB and EUC Programs, and 50th Percentile of EB and EUC Programs
+      if(TRUE){
+         
+         #Plot of EUC Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Percentile %in% c("p10", "p90")  )
+         
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/eb_euc_10_90.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Percentile)) + theme_bw( base_size = 12 )
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Percentiles of Weeks of Extended Benefits Across States",
+                           x = "Month", 
+                           y = "Weeks" )
+         gg1 = gg1 + scale_colour_manual( values = c("blue", "red"))
+         gg1
+         dev.off()
+         
+         #Plot in Landscape Orientation
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Percentile %in% c("p5", "p95")  )
+         
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/eb_euc_10_90_lscape_new.pdf", onefile = T,
+             width = 8, height = 6)
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Percentile)) + theme_bw( base_size = 12 )
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( legend.position = "top",
+                            legend.text = element_text( size = 16 ), 
+                            axis.text.x = element_text( angle = 45, hjust = 1, size = 16 ),
+                            axis.title.x = element_blank(),
+                            axis.title.y = element_text( size = 16 ), 
+                            axis.text.y = element_text( size = 16 ) )
+         gg1 = gg1 + labs( y = "Maximum Duration (Weeks)" )
+         gg1 = gg1 + scale_colour_manual( values = c("blue", "red"))
+         gg1
+         dev.off()
+         
+         #Plot of EUC Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Percentile %in% c("p50")  )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/eb_euc_50.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Percentile)) + theme_bw( base_size = 12 )
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Median Weeks of Extended Benefits Across States",
+                           x = "Month", 
+                           y = "Weeks" )
+         gg1 = gg1 + scale_colour_manual( values = c("red") )
+         gg1
+         dev.off()
+         
+      }
+      
+      #Save Mean Values Over Period
+      write.csv(mean_vals, file = paste0("C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/",
+                                         "Unemployment_Insurance/mean_eb_euc_percentiles_for_positive_months.csv") )
+      
+   }
+   
+   #EB and EUC: Number of States in Continental U.S. (excl. AK, HI, and DC) Receiving Benefits for All Tiers and EB Each Month
+   if(TRUE){
+      
+      #Summarize the Data by Counting States Receiving Benefits
+      eb_euc_summary = ui_df %>% 
+         group_by( archive ) %>%
+         summarize( TierOne = sum(as.numeric(tier_one_weeks > 0 )),
+                    TierTwo = sum(as.numeric(tier_two_weeks > 0 )),
+                    TierThree = sum(as.numeric(tier_three_weeks > 0 )), 
+                    TierFour = sum(as.numeric(tier_four_weeks > 0 )),
+                    EB = sum(as.numeric( eb_weeks > 0 )) ) %>%
+         arrange( archive ) %>%
+         mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+         data.frame() %>%
+         melt( id.vars = c("t_index", "archive") ) %>%
+         dplyr::rename( Program = variable, NumStates = value )
+      
+      #One Plot: Number of States Receiving EB and EUC
+      if(TRUE){
+         
+         #Plot of EB, EUC, and Combined EB and Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2] )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/eb_euc_states_claiming.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = NumStates, colour = Program)) + theme_bw()
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Continental U.S. States Eligible for EB and EUC Programs",
+                           x = "Month", 
+                           y = "States Eligible for Benefits" )
+         gg1
+         dev.off()
+         
+      }
+      
+      #Two Plot: Number of States Receiving EB
+      if(TRUE){
+         
+         #Plot of EB, EUC, and Combined EB and Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], Program == "EB" )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/eb_euc_states_claiming.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = NumStates, colour = Program)) + theme_bw()
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Continental U.S. States Eligible for EB Program",
+                           x = "Month", 
+                           y = "States Eligible for EB Program" )
+         gg1
+         dev.off()
+         
+      }
+      
+   }
+   
+}
+
+#Plots for Regular, EB, and EUC Program
+if(TRUE){
+   
+   #Regular, EB, and EUC: Comparison of 10th and 90th Percentiles and Medians of Total Weeks Each Month to Highlight Variation
+   if(TRUE){
+      
+      #Select the Variable of Interest
+      ui_df = ui_df %>% mutate( week_var = total_ui_weeks )
+      
+      #Summarize the Data to Take Maxes for Each Archive (Matches Up with the 73 Weeks!! Finally)
+      eb_euc_summary = ui_df %>% 
+         group_by( archive ) %>%
+         summarize( p10 = quantile( week_var, 0.10 ),
+                    p25 = quantile( week_var, 0.25 ),
+                    p50 = quantile( week_var, 0.50 ),
+                    p75 = quantile( week_var, 0.75 ),
+                    p90 = quantile( week_var, 0.90 ) ) %>%
+         arrange( archive ) %>%
+         mutate( t_index = ave( archive, 1, FUN = seq_along ) ) %>%
+         data.frame()
+      
+      #Melt the Data
+      eb_euc_summary = melt( eb_euc_summary, id.vars = c("t_index", "archive") ) %>% dplyr::rename( Percentile = variable, weeks = value )
+      
+      #Summarize the Values for Periods when Weeks are Positive
+      mean_vals = eb_euc_summary %>% filter( weeks > 0 ) %>% group_by( Percentile ) %>% summarize( mean_val = mean( weeks ) )
+      
+      #Two Plots: 10th and 90th Percentiles of the EB and EUC Programs, and 50th Percentile of EB and EUC Programs
+      if(TRUE){
+         
+         #Plot of EUC Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Percentile %in% c("p10", "p90")  )
+         
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/total_weeks_10_90.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Percentile)) + theme_bw( base_size = 12 )
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Percentiles of Weeks of Unemployment Benefits Across States",
+                           x = "Month", 
+                           y = "Maximum Weeks" )
+         gg1 = gg1 + scale_colour_manual( values = c("blue", "red"))
+         gg1
+         dev.off()
+         
+         #Plot of EUC Tiers in the Data for Sample Period
+         plot_data = eb_euc_summary %>% filter(  archive >= archive_limits[1], archive <= archive_limits[2], 
+                                                 Percentile %in% c("p50")  )
+         pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/total_weeks_50.pdf")
+         break_points = ( plot_data %>% filter( archive %% floor(archive/100) %in% c(6,12) ) )
+         gg1 = ggplot( data = plot_data ) + geom_line( aes(x = t_index, y = weeks, colour = Percentile)) + theme_bw( base_size = 12 )
+         gg1 = gg1 + scale_x_continuous( breaks = break_points$t_index, labels = break_points$archive )
+         gg1 = gg1 + theme( axis.text.x = element_text( angle = 90, hjust = 1 ))
+         gg1 = gg1 + labs( title = "Median Weeks of Unemployment Benefits Across States",
+                           x = "Month", 
+                           y = "Weeks" )
+         gg1 = gg1 + scale_colour_manual( values = c("red") )
+         gg1
+         dev.off()
+         
+      }
+      
+      #Save Mean Values Over Period
+      write.csv(mean_vals, file = paste0("C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/",
+                                         "Unemployment_Insurance/mean_total_benefit_percentiles_for_positive_months.csv") )
+      
+   }
+   
+}
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                 PLOTS OF INDIVIDUAL BENEFIT AMOUNTS                                                                   #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Define Benefit Function
+if(TRUE){
+   
+   #Year 2010
+   y2010_benefits = function( x ){
+      weeks = 34 + 26*as.numeric( x >= 6) + 7*as.numeric( x>= 8)+6*as.numeric( x >= 8.5 )
+      return(weeks)
+   }
+   
+   #August 2012
+   y2012_benefits = function( x ){
+      weeks = 20 + 14*as.numeric( x >= 6) + 13*as.numeric( x>= 6.5)+13*as.numeric( x >= 7 )+7*as.numeric( x >= 8 ) + 6*as.numeric( x >= 9 )
+      return(weeks)
+   }
+   
+}
+
+#Plot the Functions for Years 2010 and 2012
+if(TRUE){
+   
+   #Declare Linear Spaces
+   n_points = 10^4
+   start_end_points = c(0,10)
+   lin_space = start_end_points[1]+(start_end_points[2]-start_end_points[1])*(c(1:n_points)/n_points)
+   
+   #Year 2010 Data
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/year_2010_policy.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = data.frame( ur = lin_space, max_weeks = y2010_benefits(lin_space), stringsAsFactors = FALSE )
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.30 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(15,75) ) + scale_x_continuous( limits = c(5,10) )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1 + labs( x = "State Unemployment Rate", 
+                     y = "Extended Benefits (Weeks)" )
+   gg1
+   dev.off()
+   
+   #August 2012 Data
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/august_2012_policy.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = data.frame( ur = lin_space, max_weeks = y2012_benefits(lin_space), stringsAsFactors = FALSE )
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.5 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(15,75) ) + scale_x_continuous( limits = c(5,10) )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1 + labs( x = "State Unemployment Rate", 
+                     y = "Extended Benefits (Weeks)" )
+   gg1
+   dev.off()
+   
+   #Year 2010 and August 2012 Data
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/year_2010_2012_policy.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = data.frame( ur = lin_space, max_weeks = y2010_benefits(lin_space), year = "Y2010", stringsAsFactors = FALSE )
+   plot_data = rbind( plot_data, data.frame( ur = lin_space, max_weeks = y2012_benefits(lin_space), year = "Y2012", stringsAsFactors = FALSE ) )
+   gg1 = ggplot( data = plot_data ) + geom_line( aes(x = ur, y = max_weeks, colour = year ) ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(15,75) ) + scale_x_continuous( limits = c(4,10) )
+   gg1 = gg1 + theme( legend.position = "top",
+                      legend.text = element_text( size = 16 ),
+                      axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1 + labs( x = "State Unemployment Rate", 
+                     y = "Extended Benefits (Weeks)" )
+   gg1 = gg1 + scale_colour_manual( values = c("blue", "red"))
+   gg1
+   dev.off()
+   
+}
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                 PLOTS OF JUMPS ACROSS STATE LINES OVER TIME                                                           #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Define the Benefit Functions
+if(TRUE){
+   
+   #Pre-2008 Function
+   pre_2008_state = function(x){ return(26) }
+   
+   #Post-2008 Function
+   post_2008_function = function(x){ 
+      return_val = ifelse( x > 0, 26, 57 ) 
+      return(return_val)
+   }
+   
+}
+
+#Plot the Graphics for the Function -- Plus or Minus 50 Mile Radius
+if(TRUE){
+   
+   #Declare Linear Spaces
+   n_points = 10^3
+   start_end_points = c(-100,100)
+   lin_space = start_end_points[1]+(start_end_points[2]-start_end_points[1])*(c(1:n_points)/n_points)
+   
+   #Create Datasets for Before and After
+   plot_data_before = data.frame( ur = lin_space, max_weeks = pre_2008_state(lin_space), stringsAsFactors = FALSE )
+   plot_data_after = data.frame( ur = lin_space, max_weeks = post_2008_function(lin_space), stringsAsFactors = FALSE )
+   
+   #Year 2010 Data geom_vline(xintercept = c(0), linetype="dotted")
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/pre_2008_state_jump.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = plot_data_before
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.50 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(0,100) ) + scale_x_continuous( limits = start_end_points )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1+ geom_vline( xintercept = c(0), linetype = "dotted" )
+   gg1 = gg1 + labs( x = "Distance to Border (Miles)", 
+                     y = "Unemployment Benefits (Weeks)" )
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[1]*(1/2), y=85, label="Georgia",
+                        color="red", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[2]*(1/2), y=85, label="North \n Carolina",
+                        color="lightblue", size = 10, fontface = "bold")
+   gg1
+   dev.off()
+   
+   #Jump in the benefit amount data
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/post_2008_state_jump.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = plot_data_after
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.50 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(0,100) ) + scale_x_continuous( limits = start_end_points )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1+ geom_vline( xintercept = c(0), linetype = "dotted" )
+   gg1 = gg1 + labs( x = "Distance to Border (Miles)", 
+                     y = "Unemployment Benefits (Weeks)" )
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[1]*(1/2), y=85, label="Georgia",
+                        color="red", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[2]*(1/2), y=85, label="North \n Carolina",
+                        color="lightblue", size = 10, fontface = "bold")
+   gg1
+   dev.off()
+   
+   #Put the bars for the Border Areas
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/restrict_2008_state_jump.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = plot_data_after
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.50 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(0,100) ) + scale_x_continuous( limits = start_end_points )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1+ geom_vline( xintercept = c(0), linetype = "dotted" )
+   gg1 = gg1 + geom_vline( xintercept = c(-25), color = "black")
+   gg1 = gg1 + geom_vline( xintercept = c(25), color = "black")
+   gg1 = gg1 +  annotate("rect", xmin = -25, xmax = 25, ymin = -Inf, ymax = Inf,
+                         alpha = .2)
+   gg1 = gg1 + labs( x = "Distance to Border (Miles)", 
+                     y = "Unemployment Benefits (Weeks)" )
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[1]*(1/2), y=85, label="Georgia",
+                        color="red", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[2]*(1/2), y=85, label="North \n Carolina",
+                        color="lightblue", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x = 0, y = 42.5, label="Sample",
+                        color = "black", size = 10, fontface = "bold")
+   gg1
+   dev.off()
+   
+}
+
+#Second Set of Plots -- Within South Carolina-North Carolina Pair
+if(TRUE){
+   
+   #Declare Linear Spaces
+   n_points = 10^3
+   start_end_points = c(-100,100)
+   lin_space = start_end_points[1]+(start_end_points[2]-start_end_points[1])*(c(1:n_points)/n_points)
+   
+   #Create Datasets for Before and After
+   plot_data_before = data.frame( ur = lin_space, max_weeks = pre_2008_state(lin_space), stringsAsFactors = FALSE )
+   plot_data_after = data.frame( ur = lin_space, max_weeks = post_2008_function(lin_space), stringsAsFactors = FALSE )
+   
+   #Before Visual
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/second_pre_2008_state_jump.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = plot_data_before
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.50 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(0,100) ) + scale_x_continuous( limits = start_end_points )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1+ geom_vline( xintercept = c(0), linetype = "dotted" )
+   gg1 = gg1 + geom_vline( xintercept = c(-25), color = "black")
+   gg1 = gg1 + geom_vline( xintercept = c(25), color = "black")
+   gg1 = gg1 +  annotate("rect", xmin = -25, xmax = 25, ymin = -Inf, ymax = Inf,
+                         alpha = .2)
+   gg1 = gg1 + labs( x = "Distance to Border (Miles)", 
+                     y = "Unemployment Benefits (Weeks)" )
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[1]*(1/2), y=85, label="South \n Carolina",
+                        color="red", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[2]*(1/2), y=85, label="North \n Carolina",
+                        color="lightblue", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x = 0, y = 42.5, label="Sample",
+                        color = "black", size = 10, fontface = "bold")
+   gg1
+   dev.off()
+   
+   #After Visual
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/second_restrict_2008_state_jump.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = plot_data_after
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.50 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(0,100) ) + scale_x_continuous( limits = start_end_points )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1+ geom_vline( xintercept = c(0), linetype = "dotted" )
+   gg1 = gg1 + geom_vline( xintercept = c(-25), color = "black")
+   gg1 = gg1 + geom_vline( xintercept = c(25), color = "black")
+   gg1 = gg1 +  annotate("rect", xmin = -25, xmax = 25, ymin = -Inf, ymax = Inf,
+                         alpha = .2)
+   gg1 = gg1 + labs( x = "Distance to Border (Miles)", 
+                     y = "Unemployment Benefits (Weeks)" )
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[1]*(1/2), y=85, label="South \n Carolina",
+                        color="red", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[2]*(1/2), y=85, label="North \n Carolina",
+                        color="lightblue", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x = 0, y = 42.5, label="Sample",
+                        color = "black", size = 10, fontface = "bold")
+   gg1
+   dev.off()
+   
+}
+
+#Third Set of Plots -- "Regression Donut Design"
+if(TRUE){
+   
+   #Declare Linear Spaces
+   n_points = 10^3
+   start_end_points = c(-100,100)
+   lin_space = start_end_points[1]+(start_end_points[2]-start_end_points[1])*(c(1:n_points)/n_points)
+   
+   #Create Datasets for Before and After
+   plot_data_before = data.frame( ur = lin_space, max_weeks = pre_2008_state(lin_space), stringsAsFactors = FALSE )
+   plot_data_after = data.frame( ur = lin_space, max_weeks = post_2008_function(lin_space), stringsAsFactors = FALSE )
+   
+   #After Donut Visual
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/donut_2008_state_jump.pdf", onefile = T,
+       width = 8, height = 6)
+   plot_data = plot_data_after
+   gg1 = ggplot( data = plot_data ) + geom_point( aes(x = ur, y = max_weeks), color = "darkblue", size = 0.50 ) + theme_bw( base_size = 12 )
+   gg1 = gg1 + scale_y_continuous( limits = c(0,100) ) + scale_x_continuous( limits = start_end_points )
+   gg1 = gg1 + theme( axis.text.x = element_text( size = 16 ),
+                      axis.title.x = element_text( size = 16 ), 
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1+ geom_vline( xintercept = c(0), linetype = "dotted" )
+   gg1 = gg1 + geom_vline( xintercept = c(-20), color = "black")
+   gg1 = gg1 + geom_vline( xintercept = c(-10), color = "black")
+   gg1 = gg1 + geom_vline( xintercept = c(10), color = "black")
+   gg1 = gg1 + geom_vline( xintercept = c(20), color = "black")
+   gg1 = gg1 +  annotate("rect", xmin = -20, xmax = -10, ymin = -Inf, ymax = Inf,
+                         alpha = .2)
+   gg1 = gg1 +  annotate("rect", xmin = 10, xmax = 20, ymin = -Inf, ymax = Inf,
+                         alpha = .2)
+   gg1 = gg1 + labs( x = "Distance to Border (Miles)", 
+                     y = "Unemployment Benefits (Weeks)" )
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[1]*(1/2), y=85, label="South \n Carolina",
+                        color="red", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x=start_end_points[2]*(1/2), y=85, label="North \n Carolina",
+                        color="lightblue", size = 10, fontface = "bold")
+   gg1 = gg1 + annotate(geom="text", x = 0, y = 42.5, label="Sample",
+                        color = "black", size = 10, fontface = "bold")
+   gg1
+   dev.off()
+   
+   
+}
+
+#########################################################################################################################################################################
+#                                                                                                                                                                       #
+#                                                                 PLOTS OF PARTIAL EQUILLIBRIUM ESTIMATES FOR RESULTS                                                   #
+#                                                                                                                                                                       #
+#########################################################################################################################################################################
+
+#Counterfactual Paths for Defaults and Foreclosures
+if(TRUE){
+   
+   #Create the Dataset for Partial Equillibrium Amounts
+   if(TRUE){
+      
+      #Data Frame for Baseline Table
+      pe_df = data.frame( Year = c(2008:2013), 
+                          Realized = c(951090,2320309, 2132809, 1780283, 1475142, 1001012),
+                          Sovich = c(32368,322593,476387,385037,244378,111594),
+                          Hsu = c(20978,285730,434246,320041,192586,78986) )
+                          
+      
+      #Create the Counterfactual Paths
+      pe_df = pe_df %>% mutate( Counterfactual = Realized + Sovich,
+                                HsuPath = Realized + Hsu ) %>%
+                        dplyr::select( Year, Realized, Counterfactual, HsuPath)
+      
+      #Create the Cumulative Total Path
+      pe_df = pe_df %>% mutate( Realized = Realized/10^6, Counterfactual = Counterfactual/10^6, HsuPath = HsuPath/10^6 )
+      #pe_df = pe_df %>% mutate( Realized = cumsum(Realized), Counterfactual = cumsum(Counterfactual), HsuPath = cumsum(HsuPath) )
+      
+      #Melt the Data Frame
+      plot_df = melt( pe_df, id.vars = c("Year") ) %>% dplyr::rename( Path = variable, Foreclosures = value ) %>%
+                mutate( Path = as.character(Path) ) %>% 
+                mutate( Path = ifelse( Path == "HsuPath", "Hsu et al.", Path ),
+                        Path = ifelse( Path == "Counterfactual", "Counterfactual (Lower Bound)", Path) )
+      
+      #Remove the Hsu et al. Path
+      plot_df_removed = plot_df %>% filter( Path != "Hsu et al." )
+      
+   }
+   
+   #Plot in Landscape Orientation (with Hsu et al. Path)
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/foreclosure_counterfactual_path.pdf", onefile = T,
+       width = 8, height = 6)
+   gg1 = ggplot( data = plot_df ) + geom_line( aes(x = Year, y = Foreclosures, linetype = Path, colour = Path)) + theme_bw( base_size = 12 )
+   gg1 = gg1 + theme( legend.position = "top",
+                      legend.text = element_text( size = 16 ), 
+                      axis.text.x = element_text( angle = 45, hjust = 1, size = 16 ),
+                      axis.title.x = element_blank(),
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1 + labs( y = "Foreclosures (millions)" )
+   gg1 = gg1 + scale_linetype_manual(values=c("twodash", "dashed", "solid"))
+   gg1 = gg1 + scale_colour_manual( values = c("blue", "red", "black"))
+   gg1
+   dev.off()
+   
+   #Plot in Landscape Orientation (without Hsu et al. Path)
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/foreclosure_counterfactual_path_no_hsu_et_al.pdf", onefile = T,
+       width = 8, height = 6)
+   gg1 = ggplot( data = plot_df_removed ) + geom_line( aes(x = Year, y = Foreclosures, linetype = Path, colour = Path)) + theme_bw( base_size = 12 )
+   gg1 = gg1 + theme( legend.position = "top",
+                      legend.text = element_text( size = 16 ), 
+                      axis.text.x = element_text( angle = 45, hjust = 1, size = 16 ),
+                      axis.title.x = element_blank(),
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1 + labs( y = "Foreclosures (millions)" )
+   gg1 = gg1 + scale_linetype_manual(values=c("twodash","solid"))
+   gg1 = gg1 + scale_colour_manual( values = c("blue", "black"))
+   gg1
+   dev.off()
+   
+}
+
+#Partial Equillibrium Estimates for Installment Credit
+if(TRUE){
+   
+   #Create the Dataset for Partial Equillibrium Amounts
+   if(TRUE){
+      
+      #Data Frame for Baseline Table
+      pe_df = data.frame( Year = c(2008:2013), 
+                          Realized = c(1707+353,1818+282,1597+321,1546+359,1947+409,2156+453),
+                          Sovich = c(25,92,120,115,116,92) )
+      
+      #Create the Counterfactual Paths
+      pe_df = pe_df %>% mutate( Counterfactual = Realized + Sovich ) %>%
+         dplyr::select( Year, Realized, Counterfactual)
+      
+      #Create the Cumulative Total Path
+      pe_df = pe_df %>% mutate( Realized = Realized/10^3, Counterfactual = Counterfactual/10^3 )
+      #pe_df = pe_df %>% mutate( Realized = cumsum(Realized), Counterfactual = cumsum(Counterfactual), HsuPath = cumsum(HsuPath) )
+      
+      #Melt the Data Frame
+      plot_df = melt( pe_df, id.vars = c("Year") ) %>% dplyr::rename( Path = variable, Credit = value ) %>%
+         mutate( Path = as.character(Path) ) %>% 
+         mutate( Path = ifelse( Path == "Counterfactual", "Counterfactual (Lower Bound)", Path) )
+      
+   }
+   
+   #Plot in Landscape Orientation
+   pdf(file = "C:/Users/SOVICHD/Dropbox/Unemployment Insurance Credit Supply/Images/Unemployment_Insurance/credit_counterfactual_path.pdf", onefile = T,
+       width = 8, height = 6)
+   gg1 = ggplot( data = plot_df ) + geom_line( aes(x = Year, y = Credit, linetype = Path, colour = Path)) + theme_bw( base_size = 12 )
+   gg1 = gg1 + theme( legend.position = "top",
+                      legend.text = element_text( size = 16 ), 
+                      axis.text.x = element_text( angle = 45, hjust = 1, size = 16 ),
+                      axis.title.x = element_blank(),
+                      axis.title.y = element_text( size = 16 ), 
+                      axis.text.y = element_text( size = 16 ) )
+   gg1 = gg1 + labs( y = "Installment Debt Originations (trillions)" )
+   gg1 = gg1 + scale_linetype_manual(values=c("twodash", "dashed", "solid"))
+   gg1 = gg1 + scale_colour_manual( values = c("blue", "red", "black"))
+   gg1
+   dev.off()
+   
+}
+

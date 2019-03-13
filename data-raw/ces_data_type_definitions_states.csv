@@ -1,0 +1,5 @@
+data_type_code,description
+01,All employees in thousands
+02,Average weekly hours of all employees (private sector industries only)
+03,Average hourly earnings of all employees (private sector industries only)
+11,Average weekly earnings of all employees (private sector industries only)

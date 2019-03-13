@@ -1,0 +1,80 @@
+
+#' BLS SeriesIDs for CES data.
+#'
+#' \code{ces_seriesid} constructs BLS SeriesIDs based on its given arguments.
+#'
+#' To query CES data from the BLS, users must specify the data they are searching for in the format
+#' of a SeriesID string. This function creates SeriesIDs for users based on their desired data.
+#' Parameters for CES data can be found in the data files ces_national_codes_list and
+#' ces_state_codes_list. This function takes subsets of these parameters as inputs and returns raw
+#' data form the CES as outputs.
+#'
+#' @param adjustment Character. Seasonal adjustment (S) or not (U). 
+#' @param industries Character vector. Vector of CES industries. See built-in data.
+#' @param data_types Character vector. Vecotr 
+#' @return If all inputs are integer and logical, then the output
+#'   will be an integer. If integer overflow
+#'   \url{http://en.wikipedia.org/wiki/Integer_overflow} occurs, the output
+#'   will be NA with a warning. Otherwise it will be a length-one numeric or
+#'   complex vector.
+#'
+#'   Zero-length vectors have sum 0 by definition. See
+#'   \url{http://en.wikipedia.org/wiki/Empty_sum} for more details.
+#' @examples
+#' sum(1:10)
+#' sum(1:5, 6:10)
+#' sum(F, F, F, T, T)
+ces_seriesid = function(adjustment, industries, data_types, states) {
+   if(missing(states)) {
+      temp_str = apply(expand.grid(c("CE"), adjustment, industries, data_types),
+                       1,
+                       FUN = function(x) { paste(x, collapse = "", sep = "") })
+   } else {
+      temp_str = apply(expand.grid(c("SM"), adjustment, states, industries, data_types),
+                       1,
+                       FUN = function(x) { paste(x, collapse = "", sep = "") })
+   }
+   if(length(temp_str)>50){
+      message("Warning! BLS API only allows 50 series per query with an API key. Please reduce!")
+   }
+   if((sum(data_types %in% c("03","11"))!=0) &
+      (sum(industries %in% c("00000000","90000000"))!=0)) {
+      message(paste("Warning! BLS only has wage and earnings statistics for the private sector.",
+                    "Government sectors and total nonfarm sectors will not return such statistics."))
+   }
+   return(temp_str)
+}
+
+
+ces.create_national_series = function(adjustment = "S", industry = c("00000000"), data_type = c("01")) {
+
+   #Create the grid expansion
+   temp_str = expand.grid(c("CE"), adjustment, industry, data_type)
+
+   #Compress to strings
+   temp_str = apply( temp_str, 1, FUN = function(x) { paste(x, collapse = "", sep = "") })
+
+   #Send warning if number of query strings exceeds API limit
+   if(length(temp_str)>50){message("Warning! BLS API only allows 50 (25) series per query with (without) an API key. Please adjust accordingly.")}
+
+   #Return result
+   return(temp_str)
+
+}
+
+
+ces.create_state_series = function(adjustment = "S", states = c("0100000"), industry = c("00000000"), data_type = c("01")){
+
+   #Create the grid expansion
+   temp_str = expand.grid(c("SM"), adjustment, states, industry, data_type)
+
+   #Compress to strings
+   temp_str = apply( temp_str, 1, FUN = function(x) { paste(x, collapse = "", sep = "") })
+
+   #Send warning if number of query strings exceeds API limit
+   if(length(temp_str)>50){message("Warning! BLS API only allows 50 (25) series per query with (without) an API key. Please adjust accordingly.")}
+
+   #Return result
+   return(temp_str)
+
+}

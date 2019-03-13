@@ -1,0 +1,6 @@
+string_postions,field_name,example_value,example_translation
+1-2,Prefix,SM,Current employment statistics for states
+3,Seasonal adjustment,U,Unadjusted
+4-10,State code,1900000,Iowa
+11-18,Industry supersector,00000000, Total nonfarm
+19-20,Data type,01,All employees in thousands

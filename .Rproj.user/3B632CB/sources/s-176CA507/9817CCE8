@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551891031349.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "5|72|36|0|\n54|123|68|0|\n70|78|76|0|\n78|26|82|0|\n84|26|87|0|\n93|37|110|0|\n112|127|126|0|\n141|45|181|0|\n",
+    "hash" : "0",
+    "id" : "9817CCE8",
+    "lastKnownWriteTime" : 1551029390,
+    "last_content_update" : 1551907719765,
+    "path" : "C:/Users/SOVICHD/Dropbox/Programming/rBLS/Code/bls_functions.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "54,0",
+        "scrollLine" : "4"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

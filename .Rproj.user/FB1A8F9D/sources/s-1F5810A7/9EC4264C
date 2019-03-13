@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552058557458.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "136|38|160|0|\n",
+    "hash" : "0",
+    "id" : "9EC4264C",
+    "lastKnownWriteTime" : 1552514457,
+    "last_content_update" : 1552514457876,
+    "path" : "C:/Users/dsovich/Dropbox/Programming/Packages/blsr/R/ces.R",
+    "project_path" : "R/ces.R",
+    "properties" : {
+        "cursorPosition" : "132,12",
+        "scrollLine" : "113"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

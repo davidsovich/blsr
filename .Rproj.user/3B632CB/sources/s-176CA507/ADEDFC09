@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551893560438.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "ADEDFC09",
+    "lastKnownWriteTime" : 1551403027,
+    "last_content_update" : 1551403027,
+    "path" : "C:/Users/SOVICHD/Dropbox/Programming/rBLS/Code/examples.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "22,7",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

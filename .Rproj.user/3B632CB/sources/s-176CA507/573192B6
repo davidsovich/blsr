@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1551891329576.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "573192B6",
+    "lastKnownWriteTime" : 1551907389,
+    "last_content_update" : 1551907389328,
+    "path" : "C:/Users/SOVICHD/Dropbox/Programming/Packages/blsr/data-raw/jolts_codes.R",
+    "project_path" : "data-raw/jolts_codes.R",
+    "properties" : {
+        "cursorPosition" : "12,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

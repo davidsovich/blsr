@@ -1,0 +1,29 @@
+industry_code,description,level,private_sector_flag,naics_supersector_code,naics_supersector_name
+000000,Total nonfarm,0,1,,
+100000,Total private,1,1,,
+110099,Mining and logging,2,1,10,Natural resources and mining
+230000,Construction,2,1,20,Construction
+300000,Manufacturing,2,1,30,Manufacturing
+320000,Durable goods manufacturing,3,1,,
+340000,Nondurable goods manufacturing,3,1,,
+400000,"Trade, transportation, and utilities",2,1,40,"Trade, transportation, and utilities"
+420000,Wholesale trade,3,1,,
+440000,Retail trade,3,1,,
+480099,"Transportation, warehousing, and utilities",3,1,,
+510000,Information,2,1,50,Information
+510099,Financial activities,2,1,55,Financial activities
+520000,Finance and insurance,3,1,,
+530000,Real estate and rental and leasing,3,1,,
+540099,Professional and business services,2,1,60,Professional and business services
+600000,Education and health services,2,1,65,Education and health services
+610000,Educational services,3,1,,
+620000,Health care and social assistance,3,1,,
+700000,Leisure and hospitality,2,1,70,Leisure and hospitality
+710000,"Arts, entertainment, and recreation",3,1,,
+720000,Accommodation and food services,3,1,,
+810000,Other services,2,1,80,Other services
+900000,Government,1,0,90,Government
+910000,Federal,2,0,,
+920000,State and local,2,0,,
+923000,State and local government education,3,0,,
+929000,"State and local government, excluding education",3,0,,

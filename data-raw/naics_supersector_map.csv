@@ -1,0 +1,27 @@
+two_digit_naics,two_digit_naics_name,naics_supersector_code,naics_supersector_name,private_sector_flag
+11,Logging,10,Natural resources and mining,1
+21,Mining,10,Natural resources and mining,1
+23,Construction,20,Construction,1
+31,Manufacturing,30,Manufacturing,1
+32,Manufacturing,30,Manufacturing,1
+33,Manufacturing,30,Manufacturing,1
+42,Wholesale trade,40,"Trade, transportation, and utilities",1
+44,Retail trade,40,"Trade, transportation, and utilities",1
+45,Retail trade,40,"Trade, transportation, and utilities",1
+48,Transportation and warehousing,40,"Trade, transportation, and utilities",1
+49,Transportation and warehousing,40,"Trade, transportation, and utilities",1
+22,Utilities,40,"Trade, transportation, and utilities",1
+51,Information,50,Information,1
+52,Finance and insurance,55,Financial activities,1
+53,Real estate and rental and leasing,55,Financial activities,1
+54,"Professional, scientific, and technical services",60,Professional and business services,1
+55,Management of companies and enterprises,60,Professional and business services,1
+56,Administrative support and waste management and remediation services,60,Professional and business services,1
+61,Educational services,65,Education and health services,1
+62,Health care and social assistance,65,Education and health services,1
+71,"Arts, entertainment, and recreation",70,Leisure and hospitality,1
+72,Accommodation and food services,70,Leisure and hospitality,1
+81,"Other services, except public administration",80,Other services,1
+91,Federal government,90,Government,0
+92,State government,90,Government,0
+93,Local government,90,Government,0

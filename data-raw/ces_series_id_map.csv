@@ -1,0 +1,5 @@
+string_postions,field_name,example_value,example_translation
+1-2,Prefix,CE,Current employment statistics
+3,Seasonal adjustment,U,Unadjusted
+4-11,Industry supersector,00000000, Total nonfarm
+12-13,Data type,01,All employees in thousands

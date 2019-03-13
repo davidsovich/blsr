@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1552058627296.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "F2F7BF28",
+    "lastKnownWriteTime" : 1551907427,
+    "last_content_update" : 1551907427,
+    "path" : "C:/Users/dsovich/Dropbox/Programming/Packages/blsr/data-raw/naics_codes.R",
+    "project_path" : "data-raw/naics_codes.R",
+    "properties" : {
+        "cursorPosition" : "16,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

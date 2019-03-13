@@ -1,0 +1,24 @@
+
+# CES function tests ------------------------------------------------------------------------------
+
+# Parameters to chance
+indu_choice = (ces_national_codes_list$indu_codes %>%
+                  filter(level == 2, private_sector_flag == 1))$industry_code
+seasonal_adj = "S"
+data_types = (ces_national_codes_list$data_types %>%
+                 filter(data_type_code %in% c("01", "03", "11")))$data_type_code
+state_choices = (ces_state_codes_list$state_codes %>%
+                    filter(state_id %in% c("NV", "CA", "UT")))$state_code
+
+# Test series extraction functions
+national_seriesid = ces_seriesid(adjustment = seasonal_adj,
+                                 industries = indu_choice,
+                                 data_types = data_types)
+
+state_series = ces_seriesid(adjustment = seasonal_adj,
+                            industries = indu_choice[1:2],
+                            data_types = data_types,
+                            states = state_choices)
+
+
+# JOLTS function tests -----------------------------------------------------------------------------
