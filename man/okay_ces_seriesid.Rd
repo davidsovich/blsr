@@ -19,7 +19,7 @@ data_types given in \code{ces_national_codes_list} or \code{ces_state_codes_list
 states given in \code{ces_national_codes_list} or \code{ces_state_codes_list} datasets.}
 }
 \value{
-Vector of CES series IDs.
+TRUE if the series IDs are valid. FALSE otherwise.
 }
 \description{
 \code{okay_ces_seriesid} checks whether the inputs yield a valid CES series ID string.

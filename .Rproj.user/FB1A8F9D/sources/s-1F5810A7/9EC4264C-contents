@@ -61,7 +61,7 @@ ces_seriesid = function(adjustment, industries, data_types, states) {
 #' data_types given in \code{ces_national_codes_list} or \code{ces_state_codes_list} datasets.
 #' @param states Optional character vector. See vignette. Leave blank for total US. List of
 #' states given in \code{ces_national_codes_list} or \code{ces_state_codes_list} datasets.
-#' @return Vector of CES series IDs.
+#' @return TRUE if the series IDs are valid. FALSE otherwise.
 #' @examples
 #' okay_ces_seriesid("S", "0000000", "01")
 okay_ces_seriesid = function(adjustment, industries, data_types, states){

@@ -169,8 +169,6 @@ clean_jolts = function(bls_df) {
       dplyr::left_join( y = get_jolts_naics_map(bls_dir) %>%
                            dplyr::select(-one_of("level", "description")),
                         by = c("indu_code"="industry_code") )
-
-   #Keep subset of variables
    jolts_df = jolts_df %>%
       dplyr::select( archive, year, period, seriesID, value, variable_name,
                      industry_name, region_name, seasonal_code, private_sector_flag,

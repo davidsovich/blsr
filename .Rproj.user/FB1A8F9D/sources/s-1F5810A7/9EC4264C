@@ -4,16 +4,16 @@
     "created" : 1552058557458.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "136|38|160|0|\n",
+    "folds" : "66|73|106|0|\n",
     "hash" : "0",
     "id" : "9EC4264C",
-    "lastKnownWriteTime" : 1552514457,
-    "last_content_update" : 1552514457876,
+    "lastKnownWriteTime" : 1552538509,
+    "last_content_update" : 1552538509426,
     "path" : "C:/Users/dsovich/Dropbox/Programming/Packages/blsr/R/ces.R",
     "project_path" : "R/ces.R",
     "properties" : {
-        "cursorPosition" : "132,12",
-        "scrollLine" : "113"
+        "cursorPosition" : "123,33",
+        "scrollLine" : "115"
     },
     "relative_order" : 2,
     "source_on_save" : false,

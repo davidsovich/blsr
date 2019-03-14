@@ -46,6 +46,14 @@ temp_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
                        data_types = data_types,
                        clean = FALSE)
 temp_df_clean = clean_ces_national(temp_df)
+alt_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
+                      start_year = 2010,
+                      end_year = 2015,
+                      adjustment = seasonal_adj,
+                      industries = indu_choice,
+                      data_types = data_types,
+                      clean = TRUE)
+all.equal(temp_df_clean, alt_df)
 
 # Test data download functions for state data
 temp_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
@@ -57,6 +65,15 @@ temp_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
                        states = state_choices,
                        clean = FALSE)
 temp_df_clean = clean_ces_state(temp_df)
+alt_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
+                       start_year = 2010,
+                       end_year = 2015,
+                       adjustment = seasonal_adj,
+                       industries = indu_choice[1:2],
+                       data_types = data_types,
+                       states = state_choices,
+                       clean = TRUE)
+all.equal(temp_df_clean, alt_df)
 
 
 # JOLTS function tests -----------------------------------------------------------------------------
