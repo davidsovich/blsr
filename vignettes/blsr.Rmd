@@ -1,0 +1,149 @@
+---
+title: "Introduction to blsr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, echo = FALSE, message = FALSE,  warning=FALSE, results = "hide"}
+knitr::opts_chunk$set(collapse = T, comment = "#>")
+options(tibble.print_min = 4L, tibble.print_max = 4L)
+library(tidyverse)
+library(blscrapeR)
+library(reshape2)
+set.seed(1014)
+devtools::load_all('C:/Users/dsovich/Dropbox/Programming/Packages/blsr')
+```
+
+The Bureau of Labor Statistics (BLS) provides publicly available data on different aspects of the U.S. economy. 
+
+The blsr package makes getting this data fast and easy:
+
+- It provides simple functions for remotely retrieving data from the most commonly used BLS databases. 
+
+- By constraining your options to a few key databases, it cleans the messy data that is extracted from the BLS's API.
+
+- It provides complete cross-functionality with the package blscrapeR so that users can customize their usage if need arises. 
+
+This document introduces you to blsr's basic set of download tools. Because blsr is a wrapper for the blscrapeR package (which is a wrapper for the BLS API), users should read the [documentation](https://github.com/keberwein/blscrapeR) for blscrapeR before proceeding. 
+
+## Getting an API key
+
+You will want to acquire a free API key from the BLS. The API key increases your daily query limits and expands your data access. For more information on the API key, please see the documentation for blscrapeR. 
+
+## The BLS databases
+
+The BLS provides data on several different aspects of the U.S. economy. A full list of their databases can be found [here](https://www.bls.gov/data/).
+
+BLS data items are identified by objects known as series ID strings. In general, a series ID string is a combination of identifiers for: 
+
+- The database that contains the data item, e.g. CE for the Current Employment Statistics database. 
+
+- The industry and geographic area for which to summarize the data item. 
+
+- The type of data item, e.g. the unemployment rate. 
+
+Unfortunately, the precise format of series ID strings varies by the underlying database. The blsr package resolves this problem with datbase-specific functions and metadata tools. 
+
+## Current employment statistics
+
+The [Current Employment Statistics](https://www.bls.gov/web/empsit/cesfaq.htm) (CES) survey produces monthly estimates of employment, hours, and earnings. 
+
+CES estimates are available from blsr at the national and state levels across all industries. Estimates span from January 1939 to present day; however, the API only provides access beginning in XXX XXX. Seasonally and non-seasonally adjusted are available. 
+
+### National estimates
+
+National estimates for the CES belong to the CE database. To view the series ID string format for this database, examine the `series_id_map` data.frame within the loaded `ces_national_codes_list` list:
+
+```{r, echo = FALSE} 
+
+knitr::kable(ces_national_codes_list$series_id_map, caption = "Series ID string for CES national database")
+
+```
+
+The `ces_national_codes_list` list provides possible values for each field that goes into the series ID. For example, the `data_types` data.frame documents the available data items: 
+
+```{r, echo = FALSE} 
+
+knitr::kable(ces_national_codes_list$data_types, caption = "Data items available for CES national database")
+
+```
+
+The `ces_download` function is used to download and clean the data for the series IDs. Simply provide this function within your chosen values for each field of the series ID string:
+
+```{r}
+
+# Download data for total nonfarm payroll
+ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
+                      start_year = 2001,
+                      end_year = 2018,
+                      adjustment = "S",
+                      industries = "00000000",
+                      data_types = "01")
+                      
+# Look at the data
+head(ces_df)
+
+```
+
+The function can handle multiple choices for the same fields. For example, the below downloads data for all industries for U.S. employment, seasonally and non-sesaonally adjusted:
+
+### State estimates
+
+## Job openings and labor turnover survey
+
+## Local areau unemployment statistics
+
+## Quarterly census of employment and wages
+
+## Federal reserve state data
+
+
+
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))

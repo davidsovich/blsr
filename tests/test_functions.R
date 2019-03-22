@@ -1,6 +1,7 @@
 library(tidyverse)
 library(blscrapeR)
 library(lubridate)
+library(devtools)
 
 # CES function tests ------------------------------------------------------------------------------
 
@@ -28,6 +29,11 @@ state_series = ces_seriesid(adjustment = seasonal_adj,
                             states = state_choices)
 
 # Test okay series extraction functions
+okay_ces_seriesid(adjustment = "S",
+                  industries = "00000000",
+                  data_types = "01")
+
+
 okay_ces_seriesid(adjustment = seasonal_adj,
                   industries = indu_choice,
                   data_types = data_types)
