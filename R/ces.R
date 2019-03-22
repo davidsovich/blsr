@@ -69,8 +69,8 @@ okay_ces_seriesid = function(adjustment, industries, data_types, states){
       message("Error! Adjustment, industry, and data are required for series!")
       return(FALSE)
    } else {
-      load("./data/ces_national_codes_list.Rda")
-      load("./data/ces_state_codes_list.Rda")
+      #load("./data/ces_national_codes_list.Rda")
+      #load("./data/ces_state_codes_list.Rda")
    }
    if(missing(states)){
       if(!(okay_series_input(adjustment, ces_national_codes_list$seasonal_adj$seasonal_code))){
@@ -100,6 +100,10 @@ okay_ces_seriesid = function(adjustment, industries, data_types, states){
       }
       if(!okay_series_input(states, ces_state_codes_list$state_codes$state_code)){
          message("Error! Invalid state codes.")
+         return(FALSE)
+      }
+      if((sum(data_types %in% c("03","11"))>=1) & (sum(adjustment !="U")>=1)){
+         message("Error! Wage data can only be run with seasonal adjustment = U. Exiting function.")
          return(FALSE)
       }
    }

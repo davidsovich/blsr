@@ -32,7 +32,7 @@ jolts_seriesid = function(adjustment, industries, data_types, data_levels, regio
    if(missing(regions)) {
       regions = c("00")
    } else if(sum((regions != "00"))>0) {
-      message("Warning! Only total nonfarm series ID is available for JOLTS regional data. Adjusting!")
+      message("Warning! Only total nonfarm series ID is available for JOLTS regional data. Making adjustments if necessary.")
       industries = "000000"
    }
    temp_str = apply(expand.grid(c("JT"), adjustment, industries, regions, data_types, data_levels),
@@ -68,7 +68,7 @@ okay_jolts_seriesid = function(adjustment, industries, data_types, data_levels, 
       message("Error! Adjustment, industry, and data are required for series!")
       return(FALSE)
    } else {
-      load("./data/jolts_codes_list.Rda")
+      #load("./data/jolts_codes_list.Rda")
    }
    if(missing(regions)){
       if(!(okay_series_input(adjustment, jolts_codes_list$seasonal_adj$seasonal_code))){
@@ -152,7 +152,7 @@ jolts_download = function(bls_key, start_year, end_year, adjustment, industries,
          stop("Error! Invalid inputs. See function okay_ces_seriesid.")
       }
    } else {
-      if(okay_ces_seriesid(adjustment, industries, data_types, data_levels, regions)){
+      if(okay_jolts_seriesid(adjustment, industries, data_types, data_levels, regions)){
          seriesid = jolts_seriesid(adjustment, industries, data_types, data_levels, regions)
       } else {
          stop("Error! Invalid inputs. See function okay_ces_seriesid.")

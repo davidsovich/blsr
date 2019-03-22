@@ -52,13 +52,13 @@ BLS data items are identified by objects known as series ID strings. In general,
 
 - The type of data item, e.g. the unemployment rate. 
 
-Unfortunately, the precise format of series ID strings varies by the underlying database. The blsr package resolves this problem with datbase-specific functions and metadata tools. 
+Unfortunately, the precise format of series ID strings varies by the underlying database (see [here](https://www.bls.gov/help/hlpforma.htm) for a list). The blsr package resolves this problem with datbase-specific functions and metadata tools. 
 
 ## Current employment statistics
 
 The [Current Employment Statistics](https://www.bls.gov/web/empsit/cesfaq.htm) (CES) survey produces monthly estimates of employment, hours, and earnings. 
 
-CES estimates are available from blsr at the national and state levels across all industries. Estimates span from January 1939 to present day; however, the API only provides access beginning in XXX XXX. Seasonally and non-seasonally adjusted are available. 
+CES estimates are available from blsr at the national and state levels across all industries. Estimates span from January 1939 to present day. Seasonally and non-seasonally adjusted are available. 
 
 ### National estimates
 
@@ -78,28 +78,147 @@ knitr::kable(ces_national_codes_list$data_types, caption = "Data items available
 
 ```
 
-The `ces_download` function is used to download and clean the data for the series IDs. Simply provide this function within your chosen values for each field of the series ID string:
+Note that wage and payroll data can only be run at a seasonally unadjusted level as well. 
+
+The `ces_download` function is used to download and clean the data for the series IDs. Feed this function your chosen values for each field of the series ID string:
 
 ```{r}
 
 # Download data for total nonfarm payroll
 ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
-                      start_year = 2001,
-                      end_year = 2018,
+                      start_year = 2010,
+                      end_year = 2015,
                       adjustment = "S",
                       industries = "00000000",
                       data_types = "01")
-                      
-# Look at the data
-head(ces_df)
+
+# Inspect output
+head(ces_df %>% data.frame())
 
 ```
 
-The function can handle multiple choices for the same fields. For example, the below downloads data for all industries for U.S. employment, seasonally and non-sesaonally adjusted:
+The download functions are capable of handling multiple parameter choices for the same fields. By default, it performs a Cartesian of the choices:
+
+```{r, eval=FALSE}
+
+# Download data for multiple series
+ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
+                      start_year = 2013,
+                      end_year = 2015,
+                      adjustment = "S",
+                      industries = (ces_national_codes_list$indu_codes %>%
+                                       filter(level == 2, private_sector_flag == 1))$industry_code,
+                      data_types = c("01", "03", "11"))
+
+```
+
+In some cases you may not want to Cartesian the argument values. In this case, just use the base `bls_download` function and apply the `clean_ces_national` function: 
+
+```{r, eval = FALSE}
+
+# Series IDs to download
+series_ids = c("CES0000000001", "CEU0000000001")
+
+# Download the data
+ces_df = bls_download(seriesid = series_ids,
+                      start_year = 2010,
+                      end_year = 2015,
+                      bls_key = Sys.getenv("BLS_KEY"))
+
+# Clean the data
+ces_df = ces_df %>% clean_ces_national()
+
+```
+
+Note that the BLS API does not allow you to download data on more than 50 series IDs in a single request. The CES download function will prohibit you from doing so. 
 
 ### State estimates
 
+State estimates for the CES belong to the SM database. The series ID string format is within the `ces_state_codes_list` object: 
+
+```{r, echo = FALSE} 
+
+knitr::kable(ces_state_codes_list$series_id_map, caption = "Series ID string for CES state database")
+
+```
+
+The same `ces_download` function can be used for state data by populating the `state` argument:
+
+```{r}
+
+# Download data for total nonfarm payroll
+ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
+                      start_year = 2010,
+                      end_year = 2015,
+                      adjustment = "U",
+                      industries = "05000000",
+                      data_types = c("01", "03", "11"),
+                      states = "1900000")
+
+# Inspect output
+head(ces_df %>% data.frame())
+
+```
+
+Other functionality remains the same as national series. Note that certain data series are available at the national level may not available at the state level from the BLS. 
+
 ## Job openings and labor turnover survey
+
+The [Job Openings and Labor Turnover Survey](https://www.bls.gov/jlt/jltprovq.htm) (JOLTS) produces monthly estimates of job openings, hires, quits, layoffs and discharges, and other separations. 
+
+JOLTS estimates are available from blsr at the national and regional level across all industries. The data is available via API from December 2000 to present day. 
+
+Use the `jolts_codes_list` object to view the series ID string format for the JOLTS database:
+
+```{r, echo = FALSE} 
+
+knitr::kable(jolts_codes_list$series_id_map, caption = "Series ID string for JOLTS database")
+
+```
+
+For example, to retrive the monthly number of seasonally adjusted non-farm hires, we need to use the series ID `JTS00000000HIL`. 
+
+### National estimates
+
+Use the `jolts_download` to download national estimates for JOLTS:
+
+```{r}
+
+# Download the data
+jolts_df = jolts_download(bls_key = Sys.getenv("BLS_KEY"),
+                          start_year = 2010,
+                          end_year = 2015,
+                          adjustment = "S",
+                          industries = "000000",
+                          data_types = "HI",
+                          data_levels = "L")
+
+# View the data
+head(jolts_df)
+
+```
+
+### Regional estimates
+
+JOLTS produces data for the four geographic regions of the United States. Only the total nonfarm estimates (industry 000000) are available at the regional level. 
+
+To download regional data, populate the regions field of the `jolts_download` function:
+
+```{r}
+
+# Download the data
+jolts_df = jolts_download(bls_key = Sys.getenv("BLS_KEY"),
+                          start_year = 2010,
+                          end_year = 2015,
+                          adjustment = "S",
+                          industries = "000000",
+                          data_types = "HI",
+                          data_levels = "L",
+                          regions = c("MW", "NE", "SO", "WE"))
+
+```
+
+
 
 ## Local areau unemployment statistics
 

@@ -47,10 +47,19 @@ okay_ces_seriesid(adjustment = seasonal_adj,
 temp_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
                        start_year = 2010,
                        end_year = 2015,
-                       adjustment = seasonal_adj,
-                       industries = indu_choice,
-                       data_types = data_types,
+                       adjustment = "S",
+                       industries = "00000000",
+                       data_types = "01",
                        clean = FALSE)
+ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
+                      start_year = 2010,
+                      end_year = 2015,
+                      adjustment = "S",
+                      industries = "00000000",
+                      data_types = "01",
+                      clean = TRUE)
+
+
 temp_df_clean = clean_ces_national(temp_df)
 alt_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
                       start_year = 2010,
@@ -74,12 +83,28 @@ temp_df_clean = clean_ces_state(temp_df)
 alt_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
                        start_year = 2010,
                        end_year = 2015,
-                       adjustment = seasonal_adj,
-                       industries = indu_choice[1:2],
-                       data_types = data_types,
+                       adjustment = "S",
+                       industries = (ces_state_codes_list$indu_codes %>%
+                                        filter(description == "Total private"))$industry_code,
+                       data_types = c("01", "03"),
                        states = state_choices,
                        clean = TRUE)
 all.equal(temp_df_clean, alt_df)
+
+
+state_choices = (ces_state_codes_list$state_codes %>%
+                    filter(state_id %in% c("AL")))$state_code
+indu_choices = (ces_state_codes_list$indu_codes %>%
+                   filter(description == "Total private"))$industry_code
+
+state_series = ces_seriesid(adjustment = "U",
+                            industries = indu_choices,
+                            data_types = "03",
+                            states = "0100000")
+alt_df = bls_api(seriesid = "SMU01000000500000003",
+                      start_year = 2010,
+                      end_year = 2015,
+                      registrationKey = Sys.getenv("BLS_KEY"))
 
 
 # JOLTS function tests -----------------------------------------------------------------------------
@@ -106,6 +131,8 @@ regional_seriesid = jolts_seriesid(adjustment = seasonal_adj,
                                    data_types = data_types,
                                    data_levels = data_levels,
                                    regions = region_series)
+
+# Download JOLTS data
 
 # Download the data
 bls_download(seriesid = national_seriesid, start_year = 2006, end_year = 2007, bls_key = Sys.getenv("BLS_KEY"))
