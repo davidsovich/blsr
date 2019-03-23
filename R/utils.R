@@ -185,3 +185,27 @@ clean_jolts = function(bls_df) {
    bls_df
 }
 
+# Cleans the LAUS database to a usable format
+clean_laus = function(bls_df) {
+   bls_df = bls_df %>%
+      dplyr::mutate(archive = lubridate::year(date)*100 + lubridate::month(date),
+                    seasonal_code = substr(seriesID, 3, 3),
+                    seasonal_code = ifelse( seasonal_code == "S",
+                                            "seasonally adjusted",
+                                            "unadjusted"),
+                    state_code = substr(seriesID, 4, 18),
+                    data_type_code = substr(seriesID, 19, 20))
+   bls_df = bls_df %>%
+      dplyr::left_join(y = laus_codes_list$state_codes %>%
+                          filter(in_us_flag == 1),
+                       by = c("state_code"="state_code")) %>%
+      dplyr::left_join(y = laus_codes_list$data_type_codes %>%
+                          dplyr::rename(variable_name = description),
+                       by = c("data_type_code" = "data_type_code"))
+   bls_df = bls_df %>%
+      dplyr::mutate(month = as.numeric(gsub("M", "", period))) %>%
+      dplyr::select(archive, month, period, seriesID, state_name, state_id,
+                    variable_name, value, seasonal_code)
+   bls_df
+}
+

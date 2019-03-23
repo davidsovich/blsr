@@ -180,7 +180,7 @@ For example, to retrive the monthly number of seasonally adjusted non-farm hires
 
 ### National estimates
 
-Use the `jolts_download` to download national estimates for JOLTS:
+Use the `jolts_download` function to download national estimates for JOLTS:
 
 ```{r}
 
@@ -220,49 +220,39 @@ jolts_df = jolts_download(bls_key = Sys.getenv("BLS_KEY"),
 
 
 
-## Local areau unemployment statistics
+## Local area unemployment statistics
+
+The [Local Area Unemployment Statistics](https://www.bls.gov/lau/) (LAUS) program produces monthly estimates of employment, unemployment, and labor force size.
+
+LAUS estimates are available at the state level from blsr. The data is available from January 1976 to present day.
+
+Use the `laus_codes_list` object to view the series ID string format for LAUS:
+
+```{r, echo = FALSE}
+
+knitr::kable(laus_codes_list$series_id_map, caption = "Series ID string for LAUS database")
+
+```
+
+For example, we can retrieve the seasonally adjusted unemployment rate for Alabama using the series ID `LASST010000000000003`. 
+
+### State estimates 
+
+Use the `laus_download` function to download state estimates for the LAUS:
+
+```{r}
+
+# Download the data
+laus_df = laus_download(bls_key = Sys.getenv("BLS_KEY"),
+                        start_year = 2010,
+                        end_year = 2015,
+                        adjustment = "S", 
+                        states = c("ST0100000000000", "ST0200000000000"), 
+                        data_types = c("03"))
+
+# View the data
+head(laus_df)
+
+```
 
 ## Quarterly census of employment and wages
-
-## Federal reserve state data
-
-
-
-
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
