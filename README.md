@@ -10,12 +10,24 @@ Highlights
 
 -   Simple-to-use functions for downloading data from the most commonly used BLS databases.
 
--   Returns cleaned data frames ready for panel analysis.
+-   Cleans the data returned by the BLS API and converts the data into a panel format.
+
+-   Converts user inputs into BLS series ID strings and implements error-checks.
 
 Usage
 -----
 
 A more detailed usage description can be found in the [vignette](www.davidsovich.com).
+
+Current, the supported BLS databases include:
+
+-   Current employment statistics (CES)
+
+-   Job openings and labor turnover survey (JOLTS)
+
+-   Local area unemployment statistics (LAUS)
+
+Examples:
 
 ``` r
 library(blscrapeR)
