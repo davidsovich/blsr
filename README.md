@@ -3,7 +3,7 @@
 blsr
 ====
 
-An R package for obtaining and cleaning data from the Bureau of Labor Statistics (BLS). This product uses the BLS API and requires that the user obtain an API key from the BLS.
+An R package for obtaining and cleaning data from the Bureau of Labor Statistics (BLS). This package uses the BLS API.
 
 Highlights
 ----------
@@ -12,12 +12,14 @@ Highlights
 
 -   Cleans the data returned by the BLS API and converts the data into a panel format.
 
--   Can be used to supplement the blscrapeR package by converting user inputs into BLS series ID strings and implementing error-checks.
+-   Supplements the blscrapeR package by converting inputs to BLS series ID strings.
+
+-   Impelements error-checks for BLS database idiosyncracies.
 
 Usage
 -----
 
-This package retrieves data from the economic databases provided by the BLS. A more detailed usage description can be found in the [vignette](www.davidsovich.com).
+A detailed usage description can be found in the [vignette](https://github.com/davidsovich/blsr/blob/master/vignettes/blsr.pdf).
 
 This package currently supports the following BLS databases:
 
@@ -102,6 +104,11 @@ The blsr package is not available on CRAN. You can install the development versi
 library("devtools")
 devtools::install_github("davidsovich/blsr")
 ```
+
+Contact
+-------
+
+dsovich `AT` wustl.edu
 
 History
 -------
