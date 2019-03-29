@@ -12,6 +12,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+# TO OUTPUT TO PDF, change to output: rmarkdown::pdf_document and open file (top left) Save As. 
+
 ```
 
 ```{r, echo = FALSE, message = FALSE,  warning=FALSE, results = "hide"}
