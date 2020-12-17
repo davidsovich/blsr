@@ -4,22 +4,35 @@
 \alias{okay_jolts_seriesid}
 \title{Check whether JOLTS series ID is valid.}
 \usage{
-okay_jolts_seriesid(adjustment, industries, data_types, data_levels,
-  regions)
+okay_jolts_seriesid(
+  adjustment,
+  industries,
+  data_types,
+  data_levels,
+  states,
+  areas,
+  sizes
+)
 }
 \arguments{
 \item{adjustment}{Character vector. Seasonal adjustment ("S") or not ("U") or both.}
 
 \item{industries}{Character vector. See vignette. List of available
-industries given in \code{jolts_codes_list} or \code{jolts_codes_list} datasets.}
+industries given in \code{jolts_codes_list} dataset.}
 
 \item{data_types}{Character vector. Desired output. See series vignette. List of available
-data_types given in \code{jolts_codes_list} or \code{jolts_codes_list} datasets.}
+data_types given in \code{jolts_codes_list} dataset.}
 
-\item{data_levels}{Character vector. Rates ("R) or Levels ("L") or both.}
+\item{data_levels}{Character vector. Levels ("L") or rates ("R") or both.}
 
-\item{regions}{Optional character vector. See vignette. Leave blank for total US. List of
-regions given in \code{jolts_codes_list} or \code{jolts_codes_list} datasets.}
+\item{states}{Option character vector. See vignette. Leave blank for total US. List of
+states given in \code{jolts_codes_list} dataset.}
+
+\item{areas}{Optional character vector. See vignette. Leave blank for total US. List of
+areas in \code{jolts_codes_list} dataset.}
+
+\item{sizes}{Optional character vector. See vignette. Leave blank for all. List
+in \code{jolts_codes_list} dataset.}
 }
 \value{
 TRUE if the series IDs are valid. FALSE otherwise.
@@ -28,7 +41,8 @@ TRUE if the series IDs are valid. FALSE otherwise.
 \code{okay_jolts_seriesid} checks whether the inputs yield a valid JOLTS series ID string.
 }
 \details{
-General error checking for JOLTS data downloads.
+General error checking for JOLTS data downloads. Reflects the October 2020 update to JOLTS
+data series.
 }
 \examples{
 NA

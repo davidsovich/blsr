@@ -4,8 +4,19 @@
 \alias{jolts_download}
 \title{Download data from the Job Opening and Labor Turnover survey (JOLTS)}
 \usage{
-jolts_download(bls_key, start_year, end_year, adjustment, industries,
-  data_types, data_levels, regions, clean = TRUE)
+jolts_download(
+  bls_key,
+  start_year,
+  end_year,
+  adjustment,
+  industries,
+  data_types,
+  data_levels,
+  states,
+  areas,
+  sizes,
+  clean = TRUE
+)
 }
 \arguments{
 \item{bls_key}{BLS API key for the user. See vignette.}
@@ -17,15 +28,21 @@ jolts_download(bls_key, start_year, end_year, adjustment, industries,
 \item{adjustment}{Character vector. Seasonal adjustment ("S") or not ("U") or both.}
 
 \item{industries}{Character vector. See vignette. List of available
-industries given in \code{jolts_codes_list} or \code{jolts_codes_list} datasets.}
+industries given in \code{jolts_codes_list} dataset.}
 
 \item{data_types}{Character vector. Desired output. See series vignette. List of available
-data_types given in \code{jolts_codes_list} or \code{jolts_codes_list} datasets.}
+data_types given in \code{jolts_codes_list} dataset.}
 
-\item{data_levels}{Character vector. Rates ("R) or Levels ("L") or both.}
+\item{data_levels}{Character vector. Levels ("L") or rates ("R") or both.}
 
-\item{regions}{Optional character vector. See vignette. Leave blank for total US. List of
-regions given in \code{jolts_codes_list} or \code{jolts_codes_list} datasets.}
+\item{states}{Option character vector. See vignette. Leave blank for total US. List of
+states given in \code{jolts_codes_list} dataset.}
+
+\item{areas}{Optional character vector. See vignette. Leave blank for total US. List of
+areas in \code{jolts_codes_list} dataset.}
+
+\item{sizes}{Optional character vector. See vignette. Leave blank for all. List
+in \code{jolts_codes_list} dataset.}
 
 \item{clean}{Optional logical. Whether to clean the data into usable format or not.
 Defaults to TRUE.}
@@ -40,7 +57,7 @@ survey (JOLTS) database.
 \details{
 This function constructs BLS series IDs for a chosen set of parameters and then downloads
 the data from the JOLTS database. This function also cleans the data and appends on identifiers
-for easy panel formatting.
+for easy panel formatting. Reflects the October 2020 update to JOLTS data series.
 }
 \examples{
 Add in from our other exercise.

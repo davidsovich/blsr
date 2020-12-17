@@ -4,8 +4,15 @@
 \alias{laus_download}
 \title{Download data from the Local Area Unemployment Statistics (LAUS) database}
 \usage{
-laus_download(bls_key, start_year, end_year, adjustment, states,
-  data_types, clean = TRUE)
+laus_download(
+  bls_key,
+  start_year,
+  end_year,
+  adjustment,
+  states,
+  data_types,
+  clean = TRUE
+)
 }
 \arguments{
 \item{bls_key}{BLS API key for the user. See vignette.}

@@ -2,8 +2,10 @@
 
 export(bls_download)
 export(ces_download)
+export(ces_emp)
 export(ces_seriesid)
 export(jolts_download)
+export(jolts_hires)
 export(laus_download)
 export(laus_seriesid)
 export(okay_ces_seriesid)

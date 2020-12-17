@@ -4,8 +4,16 @@
 \alias{ces_download}
 \title{Download data from the Current Employment Statistics (CES) survey}
 \usage{
-ces_download(bls_key, start_year, end_year, adjustment, industries,
-  data_types, states, clean = TRUE)
+ces_download(
+  bls_key,
+  start_year,
+  end_year,
+  adjustment,
+  industries,
+  data_types,
+  states,
+  clean = TRUE
+)
 }
 \arguments{
 \item{bls_key}{BLS API key for the user. See vignette.}
@@ -41,6 +49,7 @@ the data from the CES database. This function also cleans the data and appends o
 for easy panel formatting.
 }
 \examples{
-Add in from our other exercise.
+ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"), start_year = 2010, end_year = 2015,
+adjustment = "U", industries = "05000000", data_types = c("01", "03", "11"), states = "1900000")
 
 }

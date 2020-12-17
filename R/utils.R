@@ -145,43 +145,100 @@ clean_ces_state = function(bls_df) {
 
 # Cleans the JOLTS database to a usable format
 clean_jolts = function(bls_df) {
-   #load("./data/jolts_codes_list.Rda")
-   #load("./data/naics_industry_mappings")
    bls_df = bls_df %>%
-      dplyr::mutate( archive = lubridate::year(date)*100+lubridate::month(date),
-                     seasonal_code = substr(seriesID, 3, 3),
-                     seasonal_code = ifelse( seasonal_code == "S", "seasonally adjusted", "unadjusted"),
-                     indu_code = substr(seriesID, 4, 9),
-                     element_code = substr(seriesID, 12, 13),
-                     region_code = substr(seriesID, 10, 11),
-                     level_name = substr(seriesID, 14, 14),
-                     level_name = ifelse(level_name == "L", "Level", "Rate")) %>%
-      dplyr::left_join( y = jolts_codes_list$region_codes %>%
-                           dplyr::rename(region_name = description),
-                        by = c("region_code"="region_code") ) %>%
-      dplyr::left_join( y = jolts_codes_list$element_codes %>%
-                           dplyr::rename(variable_name = description) %>%
-                           dplyr::select(dataelement_code, variable_name),
-                        by = c("element_code"="dataelement_code") ) %>%
-      dplyr::left_join( y = jolts_codes_list$indu_codes %>%
-                           dplyr::rename(industry_name = description,
-                                         industry_level = level) %>%
-                           dplyr::select(industry_code, industry_name,
-                                         industry_level,
-                                         private_sector_flag),
-                        by = c("indu_code"="industry_code") )
+      dplyr::mutate(
+         archive = lubridate::year(date)*100+lubridate::month(date),
+         seasonal_code = substr(seriesID, 3, 3),
+         seasonal_code = ifelse( seasonal_code == "S", "seasonally adjusted", "unadjusted"),
+         indu_code = substr(seriesID, 4, 9),
+         element_code = substr(seriesID, 19, 20),
+         state_code = substr(seriesID, 10, 11),
+         area_code = substr(seriesID, 12, 16),
+         size_code = substr(seriesID, 17, 18),
+         level_name = substr(seriesID, 21, 21),
+         level_name = ifelse(level_name == "L", "Level", "Rate")
+      ) %>%
+      dplyr::left_join(
+         y = jolts_codes_list$state_codes %>%
+            dplyr::rename(
+               state_name = description
+            ),
+         by = c("state_code"="state_code")
+      ) %>%
+      dplyr::left_join(
+         y = jolts_codes_list$area_codes %>%
+            dplyr::rename(
+               area_name = description
+            ),
+         by = c("area_code"="area_code")
+      ) %>%
+      dplyr::left_join(
+         y = jolts_codes_list$size_codes %>%
+            dplyr::rename(
+               size_name = description
+            ),
+         by = c("size_code"="size_code")
+      ) %>%
+      dplyr::left_join(
+         y = jolts_codes_list$element_codes %>%
+            dplyr::rename(
+               variable_name = description
+            ) %>%
+            dplyr::select(
+               dataelement_code,
+               variable_name
+            ),
+         by = c("element_code"="dataelement_code")
+      ) %>%
+      dplyr::left_join(
+         y = jolts_codes_list$indu_codes %>%
+            dplyr::rename(
+               industry_name = description,
+               industry_level = level
+            ) %>%
+            dplyr::select(
+               industry_code,
+               industry_name,
+               industry_level,
+               private_sector_flag
+            ),
+         by = c("indu_code"="industry_code")
+      )
    bls_df = bls_df %>%
-      dplyr::left_join( y = naics_industry_mappings$jolts_to_naics_map %>%
-                           dplyr::select(industry_code,
-                                         naics_supersector_code,
-                                         naics_supersector_name),
-                        by = c("indu_code"="industry_code"))
+      dplyr::left_join(
+         y = naics_industry_mappings$jolts_to_naics_map %>%
+               dplyr::select(
+                  industry_code,
+                  naics_supersector_code,
+                  naics_supersector_name
+               ),
+         by = c("indu_code"="industry_code")
+      )
    bls_df = bls_df %>%
-      dplyr::mutate(month = as.numeric(gsub("M", "", period))) %>%
-      dplyr::select(archive, month, period, seriesID, region_name, region_code,
-                    variable_name, value, seasonal_code, level_name,
-                    industry_name, industry_level, private_sector_flag,
-                    naics_supersector_code, naics_supersector_name )
+      dplyr::mutate(
+         month = as.numeric(gsub("M", "", period))
+      ) %>%
+      dplyr::select(
+         archive,
+         month,
+         period,
+         seriesID,
+         state_name,
+         state_code,
+         area_name,
+         area_code,
+         size_name,
+         size_code,
+         variable_name,
+         value,
+         seasonal_code,
+         level_name,
+         industry_name,
+         industry_level,
+         private_sector_flag,
+         naics_supersector_code,
+         naics_supersector_name
+      )
    bls_df
 }
 

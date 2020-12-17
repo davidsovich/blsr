@@ -2,6 +2,8 @@ string_postions,field_name,example_value,example_translation
 1-2,Prefix,JT,Jolts
 3,Seasonal adjustment,U,Unadjusted
 4-9,Industry,000000,Total nonfarm
-10-11,Region,00,Total US
-12-13,Data Element,HI,Hires
-14,Rate or Level,L,Level - in thousands
+10-11,State,00,Total US
+12-16,Area,00000,Total US
+17-18,Size,00,Total US
+19-20,Data Element,HI,Hires
+21,Rate or Level,R,Rate

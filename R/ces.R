@@ -135,7 +135,8 @@ okay_ces_seriesid = function(adjustment, industries, data_types, states){
 #' Defaults to TRUE.
 #' @return Cleaned data frame of CES data.
 #' @examples
-#' Add in from our other exercise.
+#' ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"), start_year = 2010, end_year = 2015,
+#' adjustment = "U", industries = "05000000", data_types = c("01", "03", "11"), states = "1900000")
 #'
 ces_download = function(bls_key, start_year, end_year, adjustment, industries, data_types, states,
                         clean = TRUE){
@@ -163,5 +164,45 @@ ces_download = function(bls_key, start_year, end_year, adjustment, industries, d
       bls_df
    }
 }
+
+#' Download employment data from Current Employment Statistics (CES) survey
+#'
+#' \code{ces_emp} downloads pre-packaged employment data from the CES database.
+#'
+#' This function downloads and cleans pre-packaged employment data from the CES database. The user
+#' has three choices of employment data: non-farm payrolls, private payrolls, or super sector
+#' payrolls.
+#'
+#' @export
+#'
+#' @param bls_key BLS API key for the user. See vignette.
+#' @param start_year Numeric. Year to start data download.
+#' @param end_year Numeric. Year to end data download.
+#' @param adjustment Character vector. Seasonal adjustment ("S") or not ("U") or both.
+#' @param series Character. Data series. Either non-farm payrolls ("nfp"), private payrolls
+#' ("private"), or supersector payrolls ("super"). Defaults to non-farm payrolls.
+#' @examples
+#' ces_df = ces_emp(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
+#'
+ces_emp = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+   if(series == "nfp") {
+      industries = "00000000"
+   } else if (series == "private") {
+      industries = "05000000"
+   } else if (series == "super") {
+      industries = dplyr::filter(ces_national_codes_list$indu_codes, level == 2)$industry_code
+   } else {
+      stop("Error! Invalid series input.")
+   }
+   ces_download(
+      bls_key = bls_key,
+      start_year = start_year,
+      end_year = end_year,
+      adjustment = adjustment,
+      industries = industries,
+      data_types = "01"
+   )
+}
+
 
 

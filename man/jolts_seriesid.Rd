@@ -4,7 +4,15 @@
 \alias{jolts_seriesid}
 \title{Series IDs for Job Openings and Labor Turnover Survey (JOLTS) data}
 \usage{
-jolts_seriesid(adjustment, industries, data_types, data_levels, regions)
+jolts_seriesid(
+  adjustment,
+  industries,
+  data_types,
+  data_levels,
+  states,
+  areas,
+  sizes
+)
 }
 \arguments{
 \item{adjustment}{Character vector. Seasonal adjustment ("S") or not ("U") or both.}
@@ -17,9 +25,13 @@ data_types given in \code{jolts_codes_list} dataset.}
 
 \item{data_levels}{Character vector. Levels ("L") or rates ("R") or both.}
 
-\item{regions}{Optional character vector. See vignette. Leave blank for total US. List of
-regions given in \code{jolts_codes_list} dataset. Only total non-farm data_types available for
-non-total U.S. series IDs.}
+\item{states}{Option character vector. See vignette. Leave blank for total US. List of
+states given in \code{jolts_codes_list} dataset.}
+
+\item{areas}{Optional character vector. See vignette. Leave blank for total US. List of
+areas in \code{jolts_codes_list} dataset.
+#' @param sizes Optional character vector. See vignette. Leave blank for all. List
+in \code{jolts_codes_list} dataset.}
 }
 \value{
 Vector of JOLTS series IDs.
@@ -33,5 +45,11 @@ The Bureau of Labor Statistics (BLS) stores data in the form of series IDs. The 
 series IDs varies by the underlying database (e.g., CES, JOLTS, etc.). Users must input
 the correct series IDs to download their desired data. This function helps overcome this problem
 by automatically generating JOLTS series IDs for a given set of inputs. Note that only total
-non-farm data series IDs can be extracted for different regions of the United States.
+non-farm data series IDs can be extracted for different regions of the United States. Reflects
+the October 2020 updates to JOLTS data series.
+}
+\examples{
+# National series for seasonally adjusted private sector hires and job openings
+jolts_seriesid(adjustment = c("S"), industries = c("100000"), data_types = c("HI", "JO"),
+data_levels = c("L"))
 }
