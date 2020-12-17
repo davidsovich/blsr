@@ -1,43 +1,47 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-blsr
-====
 
-An R package for obtaining and cleaning data from the Bureau of Labor Statistics (BLS). This package uses the BLS API.
+# blsr
 
-Highlights
-----------
+An R package for obtaining and cleaning data from the Bureau of Labor
+Statistics (BLS). This package uses the BLS API.
 
--   Simple-to-use functions for downloading data from the most commonly used BLS databases.
+## Highlights
 
--   Cleans the data returned by the BLS API and converts the data into a panel format.
+  - Simple-to-use functions for downloading data from the most commonly
+    used BLS databases.
 
--   Supplements the blscrapeR package by converting inputs to BLS series ID strings.
+  - Cleans the data returned by the BLS API and converts the data into a
+    panel format.
 
--   Impelements error-checks for BLS database idiosyncracies.
+  - Supplements the blscrapeR package by converting inputs to BLS series
+    ID strings.
 
-Usage
------
+  - Impelements error checks for BLS database idiosyncracies.
 
-A detailed usage description can be found in the [vignette](https://github.com/davidsovich/blsr/blob/master/vignettes/blsr.pdf).
+## Usage
+
+A detailed usage description can be found in the
+[vignette](https://github.com/davidsovich/blsr/blob/master/vignettes/blsr.pdf).
 
 This package currently supports the following BLS databases:
 
--   Current employment statistics (CES)
+  - Current employment statistics (CES)
 
--   Job openings and labor turnover survey (JOLTS)
+  - Job openings and labor turnover survey (JOLTS)
 
--   Local area unemployment statistics (LAUS)
+  - Local area unemployment statistics (LAUS)
 
-In the near future, this package should also support these additional BLS databases:
+In the near future, this package should also support these additional
+BLS databases:
 
--   Quarterly Census of Employment and Wages (QCEW)
+  - Quarterly Census of Employment and Wages (QCEW)
 
--   Current Population Survey (CPS)
+  - Current Population Survey (CPS)
 
--   Consumer Price Index (CPI)
+  - Consumer Price Index (CPI)
 
--   Current Expenditure Survey (CE)
+  - Current Expenditure Survey (CE)
 
 Examples:
 
@@ -47,70 +51,105 @@ library(blscrapeR)
 
 #Download data from CES
 
-   # Custom data series for CES state data
-   ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
-                      start_year = 2010,
-                      end_year = 2015,
-                      adjustment = "U",
-                      industries = "05000000",
-                      data_types = c("01", "03", "11"),
-                      states = "1900000")
+   # Custom CES state data series
+   ces_df = ces_download(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "U",
+      industries = "05000000",
+      data_types = c("01", "03", "11"),
+      states = "1900000"
+   )
    
-   # Pre-build CES data series for national employment
-   ces_df = ces_employment(bls_key = Sys.getenv("BLS_KEY"),
-                           start_year = 2010,
-                           end_year = 2015)
+   # Pre-built CES seasonally adjusted non-farm payroll series
+   ces_df = ces_employment(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "nfp",
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
+   
+   # Pre-built CES non-seasonally adjusted sector series
+   ces_df = ces_employment(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "super",
+      start_year = 2010,
+      end_year = 2018,
+      adjustment = "U"
+   )
 
 #Download data from JOLTS
 
-   # Custom data series for JOLTS regional data
-   jolts_df = jolts_download(bls_key = Sys.getenv("BLS_KEY"),
-                             start_year = 2010,
-                             end_year = 2015,
-                             adjustment = "S",
-                             industries = "000000",
-                             data_types = "HI",
-                             data_levels = "L",
-                             regions = c("MW", "NE", "SO", "WE"))
+   # Custom JOLTS hire and quit rates and levels series
+   jolts_df = jolts_download(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S",
+      industries = "000000",
+      data_types = c("HI", "QU"),
+      data_levels = c("R", "L")
+   )
    
-   # Pre-built JOLTS data series
-   jolts_df = jolts_hiring(bls_key = Sys.getenv("BLS_KEY"),
-                           start_year = 2010,
-                           end_year = 2015)
+   # Pre-built JOLTS seasonally adjusted non-farm hires series
+   jolts_df = jolts_hires(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "nfp",
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
+   
+   # Pre-built JOLTS non-seasonally adjusted sector separations series
+   jolts_df = jolts_seps(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "super",
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
 
 
 # Local area unemployment statistics
 
-   # Custom data series
-   laus_df = laus_download(bls_key = Sys.getenv("BLS_KEY"),
-                           start_year = 2010,
-                           end_year = 2015,
-                           adjustment = "S", 
-                           states = c("ST0100000000000", "ST0200000000000"), 
-                           data_types = c("03"))
+   # Custom LAUS data series
+   laus_df = laus_download(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S", 
+      states = c("ST0100000000000", "ST0200000000000"), 
+      data_types = c("03")
+   )
    
-   # Pre-built data series
-   laus_df = laus_urates(bls_key = Sys.getenv("BLS_KEY"),
-                         start_year = 2010,
-                         end_year = 2015)
+   # Pre-built LAUS seasonally adjusted unemployment rate series
+   laus_df = laus_urate(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
 ```
 
-Installation
-------------
+## Installation
 
-The blsr package is not available on CRAN. You can install the development version from Github:
+The blsr package is not available on CRAN. You can install the
+development version from Github:
 
 ``` r
 library("devtools")
 devtools::install_github("davidsovich/blsr")
 ```
 
-Contact
--------
+## Contact
 
-dsovich `AT` wustl.edu
+dsovich `AT` uky.edu
 
-History
--------
+## History
 
--   March 22, 2019: Developmental release
+  - March 22, 2019: Developmental release
+
+  - December 16, 2020: Partial update to incorporate changes to JOLTS
+    series string formats.

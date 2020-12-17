@@ -31,3 +31,7 @@ series IDs varies by the underlying database (e.g., CES, JOLTS, etc.). Users mus
 the correct series IDs to download their desired data. This function helps overcome this problem
 by automatically generating CES series IDs for a given set of inputs.
 }
+\examples{
+# National series for seasonally adjusted private sector employment and earnings
+ces_seriesid(adjustment = c("S"), industries = c("05000000"), data_types = c("01", "03"))
+}

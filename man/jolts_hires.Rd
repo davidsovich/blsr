@@ -23,11 +23,11 @@ jolts_hires(bls_key, series = "nfp", start_year, end_year, adjustment)
 }
 \details{
 This function downloads and cleans pre-packaged hiring data from the JOLTS database. The user
-has three choices of hiring data: non-farm hiring, private hiring, or super sector hiring.
+has three choices for hiring data: non-farm hiring, private hiring, or super sector hiring.
 The data is formatted in terms of hiring rates similar to the quoted JOLTS series. The
 function reflects the October 2020 update to the JOLTS data series.
 }
 \examples{
-jolts_df = ces_hires(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
+jolts_df = jolts_hires(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 
 }

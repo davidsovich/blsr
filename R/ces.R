@@ -21,10 +21,6 @@
 #' @examples
 #' # National series for seasonally adjusted private sector employment and earnings
 #' ces_seriesid(adjustment = c("S"), industries = c("05000000"), data_types = c("01", "03"))
-#'
-#' # State series for seasonally and non-seasonally adjusted employment for Florida
-#' ces_seriesid(adjustment = c("S","U"), industries = "c("00000000"), data_types = c("01"),
-#' states = c("1200000"))
 ces_seriesid = function(adjustment, industries, data_types, states) {
    if(missing(states)) {
       temp_str = apply(expand.grid(c("CE"), adjustment, industries, data_types),

@@ -24,7 +24,7 @@ An R package for obtaining and cleaning data from the Bureau of Labor Statistics
 
 - Supplements the blscrapeR package by converting inputs to BLS series ID strings.
 
-- Impelements error-checks for BLS database idiosyncracies.  
+- Impelements error checks for BLS database idiosyncracies.  
 
 ## Usage
 
@@ -56,52 +56,86 @@ library(blscrapeR)
 
 #Download data from CES
 
-   # Custom data series for CES state data
-   ces_df = ces_download(bls_key = Sys.getenv("BLS_KEY"),
-                      start_year = 2010,
-                      end_year = 2015,
-                      adjustment = "U",
-                      industries = "05000000",
-                      data_types = c("01", "03", "11"),
-                      states = "1900000")
+   # Custom CES state data series
+   ces_df = ces_download(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "U",
+      industries = "05000000",
+      data_types = c("01", "03", "11"),
+      states = "1900000"
+   )
    
-   # Pre-build CES data series for national employment
-   ces_df = ces_employment(bls_key = Sys.getenv("BLS_KEY"),
-                           start_year = 2010,
-                           end_year = 2015)
+   # Pre-built CES seasonally adjusted non-farm payroll series
+   ces_df = ces_employment(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "nfp",
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
+   
+   # Pre-built CES non-seasonally adjusted sector series
+   ces_df = ces_employment(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "super",
+      start_year = 2010,
+      end_year = 2018,
+      adjustment = "U"
+   )
 
 #Download data from JOLTS
 
-   # Custom data series for JOLTS regional data
-   jolts_df = jolts_download(bls_key = Sys.getenv("BLS_KEY"),
-                             start_year = 2010,
-                             end_year = 2015,
-                             adjustment = "S",
-                             industries = "000000",
-                             data_types = "HI",
-                             data_levels = "L",
-                             regions = c("MW", "NE", "SO", "WE"))
+   # Custom JOLTS hire and quit rates and levels series
+   jolts_df = jolts_download(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S",
+      industries = "000000",
+      data_types = c("HI", "QU"),
+      data_levels = c("R", "L")
+   )
    
-   # Pre-built JOLTS data series
-   jolts_df = jolts_hiring(bls_key = Sys.getenv("BLS_KEY"),
-                           start_year = 2010,
-                           end_year = 2015)
+   # Pre-built JOLTS seasonally adjusted non-farm hires series
+   jolts_df = jolts_hires(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "nfp",
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
+   
+   # Pre-built JOLTS non-seasonally adjusted sector separations series
+   jolts_df = jolts_seps(
+      bls_key = Sys.getenv("BLS_KEY"),
+      series = "super",
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
 
 
 # Local area unemployment statistics
 
-   # Custom data series
-   laus_df = laus_download(bls_key = Sys.getenv("BLS_KEY"),
-                           start_year = 2010,
-                           end_year = 2015,
-                           adjustment = "S", 
-                           states = c("ST0100000000000", "ST0200000000000"), 
-                           data_types = c("03"))
+   # Custom LAUS data series
+   laus_df = laus_download(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S", 
+      states = c("ST0100000000000", "ST0200000000000"), 
+      data_types = c("03")
+   )
    
-   # Pre-built data series
-   laus_df = laus_urates(bls_key = Sys.getenv("BLS_KEY"),
-                         start_year = 2010,
-                         end_year = 2015)
+   # Pre-built LAUS seasonally adjusted unemployment rate series
+   laus_df = laus_urate(
+      bls_key = Sys.getenv("BLS_KEY"),
+      start_year = 2010,
+      end_year = 2015,
+      adjustment = "S"
+   )
 
 ```
 
@@ -116,8 +150,10 @@ devtools::install_github("davidsovich/blsr")
 
 ## Contact
 
-dsovich `AT` wustl.edu
+dsovich `AT` uky.edu
 
 ## History
 
 - March 22, 2019: Developmental release
+
+- December 16, 2020: Partial update to incorporate changes to JOLTS series string formats. 
