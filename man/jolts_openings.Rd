@@ -10,7 +10,8 @@ jolts_openings(bls_key, series = "nfp", start_year, end_year, adjustment)
 \item{bls_key}{BLS API key for the user. See vignette.}
 
 \item{series}{Character. Data series. Either non-farm openings ("nfp"), private openings
-("private"), or supersector openings ("super"). Defaults to non-farm openings.}
+("private"), supersector openings ("super"), or sector openings ("sector"). Defaults to non-farm
+openings.}
 
 \item{start_year}{Numeric. Year to start data download.}
 

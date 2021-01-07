@@ -45,5 +45,4 @@ for easy panel formatting.
 \examples{
 laus_download(bls_key = "inputs", start_year = 2010, end_year = 2015,
 adjustment = "U", states = c("ST0100000000000", "ST0200000000000"), data_types = c("03"))
-
 }

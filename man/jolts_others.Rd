@@ -10,7 +10,7 @@ jolts_others(bls_key, series = "nfp", start_year, end_year, adjustment)
 \item{bls_key}{BLS API key for the user. See vignette.}
 
 \item{series}{Character. Data series. Either non-farm other ("nfp"), private other
-("private"), or supersector other ("super"). Defaults to non-farm other.}
+("private"), supersector other ("super"). or sector other ("sector"). Defaults to non-farm other.}
 
 \item{start_year}{Numeric. Year to start data download.}
 

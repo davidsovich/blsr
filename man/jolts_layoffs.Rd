@@ -10,7 +10,8 @@ jolts_layoffs(bls_key, series = "nfp", start_year, end_year, adjustment)
 \item{bls_key}{BLS API key for the user. See vignette.}
 
 \item{series}{Character. Data series. Either non-farm layoffs ("nfp"), private layoffs
-("private"), or supersector layoffs ("super"). Defaults to non-farm layoffs.}
+("private"), supersector layoffs ("super"), or sector layoffs ("sector"). Defaults to non-farm
+layoffs.}
 
 \item{start_year}{Numeric. Year to start data download.}
 

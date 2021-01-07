@@ -10,7 +10,7 @@ jolts_quits(bls_key, series = "nfp", start_year, end_year, adjustment)
 \item{bls_key}{BLS API key for the user. See vignette.}
 
 \item{series}{Character. Data series. Either non-farm quits ("nfp"), private quits
-("private"), or supersector quits ("super"). Defaults to non-farm quits.}
+("private"), supersector quits ("super"), or sector quits ("sector"). Defaults to non-farm quits.}
 
 \item{start_year}{Numeric. Year to start data download.}
 

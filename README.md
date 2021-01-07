@@ -151,5 +151,12 @@ dsovich `AT` uky.edu
 
   - March 22, 2019: Developmental release
 
-  - December 16, 2020: Partial update to incorporate changes to JOLTS
-    series string formats.
+  - December 16, 2020: Incorporated changes to JOLTS series ID formats.
+    See [press release](https://www.bls.gov/jlt/jlt_series_changes.htm).
+
+## Helpful links
+
+  - [BLS series ID formats](https://www.bls.gov/help/hlpforma.htm)
+
+  - [NAICS supersectors and
+    sectors](https://www.bls.gov/sae/additional-resources/naics-supersectors-for-ces-program.htm)

@@ -10,7 +10,8 @@ jolts_seps(bls_key, series = "nfp", start_year, end_year, adjustment)
 \item{bls_key}{BLS API key for the user. See vignette.}
 
 \item{series}{Character. Data series. Either non-farm separations ("nfp"), private separations
-("private"), or supersector separations ("super"). Defaults to non-farm separations.}
+("private"), supersector separations ("super"), or sector separations ("sector"). Defaults to
+non-farm separations.}
 
 \item{start_year}{Numeric. Year to start data download.}
 

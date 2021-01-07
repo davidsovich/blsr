@@ -12,9 +12,9 @@ jolts_download(
   industries,
   data_types,
   data_levels,
-  states,
-  areas,
-  sizes,
+  states = "00",
+  areas = "00000",
+  sizes = "00",
   clean = TRUE
 )
 }

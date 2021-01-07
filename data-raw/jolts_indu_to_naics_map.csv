@@ -1,29 +1,29 @@
-industry_code,description,level,private_sector_flag,naics_supersector_code,naics_supersector_name
-000000,Total nonfarm,0,1,,
-100000,Total private,1,1,,
-110099,Mining and logging,2,1,10,Natural resources and mining
-230000,Construction,2,1,20,Construction
-300000,Manufacturing,2,1,30,Manufacturing
-320000,Durable goods manufacturing,3,1,,
-340000,Nondurable goods manufacturing,3,1,,
-400000,"Trade, transportation, and utilities",2,1,40,"Trade, transportation, and utilities"
-420000,Wholesale trade,3,1,,
-440000,Retail trade,3,1,,
-480099,"Transportation, warehousing, and utilities",3,1,,
-510000,Information,2,1,50,Information
-510099,Financial activities,2,1,55,Financial activities
-520000,Finance and insurance,3,1,,
-530000,Real estate and rental and leasing,3,1,,
-540099,Professional and business services,2,1,60,Professional and business services
-600000,Education and health services,2,1,65,Education and health services
-610000,Educational services,3,1,,
-620000,Health care and social assistance,3,1,,
-700000,Leisure and hospitality,2,1,70,Leisure and hospitality
-710000,"Arts, entertainment, and recreation",3,1,,
-720000,Accommodation and food services,3,1,,
-810000,Other services,2,1,80,Other services
-900000,Government,1,0,90,Government
-910000,Federal,2,0,,
-920000,State and local,2,0,,
-923000,State and local government education,3,0,,
-929000,"State and local government, excluding education",3,0,,
+industry_code,description,level,private_sector_flag,naics_supersector_code,naics_supersector_name,naics_sector_code,naics_sector_name
+000000,Total nonfarm,0,1,,,,
+100000,Total private,1,1,,,,
+110099,Mining and logging,2,1,10,Natural resources and mining,"1133, 21",Natural resources and mining
+230000,Construction,2,1,20,Construction,23,Construction
+300000,Manufacturing,2,1,30,Manufacturing,"31, 32, 33",Manufacturing
+320000,Durable goods manufacturing,3,1,,,,
+340000,Nondurable goods manufacturing,3,1,,,,
+400000,"Trade, transportation, and utilities",2,1,40,"Trade, transportation, and utilities","42, 44, 45, 48, 49, 22","Trade, transportation, and utilities"
+510000,Information,2,1,50,Information,51,Information
+510099,Financial activities,2,1,55,Financial activities,"52, 53",Financial activities
+540099,Professional and business services,2,1,60,Professional and business services,"54, 55, 56",Professional and business services
+600000,Education and health services,2,1,65,Education and health services,"61, 62",Education and health services
+700000,Leisure and hospitality,2,1,70,Leisure and hospitality,"71, 72",Leisure and hospitality
+810000,Other services,2,1,80,Other services,81,Other services
+900000,Government,1,0,90,Government,"91, 92, 93",Government
+420000,Wholesale trade,5,1,40,"Trade, transportation, and utilities",42,Wholesale trade
+440000,Retail trade,5,1,40,"Trade, transportation, and utilities","44, 45",Retail trade
+480099,"Transportation, warehousing, and utilities",3,1,40,"Trade, transportation, and utilities","48, 49, 22",Transportation and warehousing
+520000,Finance and insurance,5,1,55,Financial activities,52,Finance and insurance
+530000,Real estate and rental and leasing,5,1,55,Financial activities,53,Real estate and rental and leasing
+610000,Educational services,5,1,65,Education and health services,61,Educational services
+620000,Health care and social assistance,5,1,65,Education and health services,62,Health care and social assistance
+710000,"Arts, entertainment, and recreation",5,1,70,Leisure and hospitality,71,"Arts, entertainment, and recreation"
+720000,Accommodation and food services,5,1,70,Leisure and hospitality,72,Accommodation and food services
+910000,Federal,5,0,90,Government,91,Federal government
+920000,State and local,5,0,90,Government,92,State government
+923000,State and local government education,6,0,90,Government,92,State government
+929000,"State and local government, excluding education",6,0,90,Government,92,State government

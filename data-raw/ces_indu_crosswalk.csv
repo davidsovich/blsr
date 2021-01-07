@@ -1,0 +1,27 @@
+industry_code,description,naics_indu_code,naics_indu_name,naics_supersector_code,naics_supersector_name
+10113300,Logging,1133,Logging,10,Natural resources and mining
+10210000,Mining,21,Mining,10,Natural resources and mining
+20000000,Construction,23,Construction,20,Construction
+30000000,Manufacturing,31,Manufacturing,30,Manufacturing
+30000000,Manufacturing,32,Manufacturing,30,Manufacturing
+30000000,Manufacturing,33,Manufacturing,30,Manufacturing
+41420000,Wholesale trade,42,Wholesale trade,40,"Trade, transportation, and utilities"
+42000000,Retail trade,44,Retail trade,40,"Trade, transportation, and utilities"
+42000000,Retail trade,45,Retail trade,40,"Trade, transportation, and utilities"
+43000000,Transportationa and warehousing,48,Transportation and warehousing,40,"Trade, transportation, and utilities"
+43000000,Transportationa and warehousing,49,Transportation and warehousing,40,"Trade, transportation, and utilities"
+44220000,Utilities,22,Utilities,40,"Trade, transportation, and utilities"
+50000000,Information,51,Information,50,Information
+55520000,Finance and insurance,52,Finance and insurance,55,Financial activities
+55530000,Real estate and rental and leasing,53,Real estate and rental and leasing,55,Financial activities
+60540000,Professional and technical services,54,"Professional, scientific, and technical services",60,Professional and business services
+60550000,Management of companies and enterprises,55,Management of companies and enterprises,60,Professional and business services
+60560000,Administrative and waste services,56,Administrative and support and waste management and remediation services,60,Professional and business services
+65610000,Educational services,61,Educational services,65,Education and health services
+65620000,Health care and social assistance,62,Health care and social assistance,65,Education and health services
+70710000,"Arts, entertainment, and recreation",71,"Arts, entertainment, and recreation",70,Leisure and hospitality
+70720000,Accommodation and food services,72,Accommodation and food,70,Leisure and hospitality
+80000000,Other services,81,"Other services, except public administration",80,Other services
+90910000,Federal,91,Federal government,90,Government
+90920000,State government,92,State government,90,Government
+90930000,Local government,93,Local government,90,Government

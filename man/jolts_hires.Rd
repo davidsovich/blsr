@@ -10,7 +10,8 @@ jolts_hires(bls_key, series = "nfp", start_year, end_year, adjustment)
 \item{bls_key}{BLS API key for the user. See vignette.}
 
 \item{series}{Character. Data series. Either non-farm hiring ("nfp"), private hiring
-("private"), or supersector hiring ("super"). Defaults to non-farm hiring.}
+("private"), supersector hiring ("super"), or sector hiring ("sector"). Defaults to non-farm
+hiring.}
 
 \item{start_year}{Numeric. Year to start data download.}
 
@@ -23,7 +24,7 @@ jolts_hires(bls_key, series = "nfp", start_year, end_year, adjustment)
 }
 \details{
 This function downloads and cleans pre-packaged hiring data from the JOLTS database. The user
-has three choices for hiring data: non-farm hiring, private hiring, or super sector hiring.
+has four choices for hiring data: non-farm hiring, private hiring, super sector or sector hiring.
 The data is formatted in terms of hiring rates similar to the quoted JOLTS series. The
 function reflects the October 2020 update to the JOLTS data series.
 }
