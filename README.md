@@ -63,7 +63,7 @@ library(blscrapeR)
    )
    
    # Pre-built CES seasonally adjusted non-farm payroll series
-   ces_df = ces_employment(
+   ces_df = ces_emp(
       bls_key = Sys.getenv("BLS_KEY"),
       series = "nfp",
       start_year = 2010,
@@ -72,7 +72,7 @@ library(blscrapeR)
    )
    
    # Pre-built CES non-seasonally adjusted sector series
-   ces_df = ces_employment(
+   ces_df = ces_emp(
       bls_key = Sys.getenv("BLS_KEY"),
       series = "super",
       start_year = 2010,

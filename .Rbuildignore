@@ -7,3 +7,4 @@
 ^tests$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^deprecated$
