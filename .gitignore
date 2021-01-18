@@ -5,3 +5,4 @@ inst/doc
 .Ruserdata
 .Rprofile
 deprecated/
+tests/
