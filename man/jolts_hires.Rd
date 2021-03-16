@@ -4,7 +4,14 @@
 \alias{jolts_hires}
 \title{Download hiring data from the Job Opening and Labor Turnover survey (JOLTS).}
 \usage{
-jolts_hires(bls_key, series = "nfp", start_year, end_year, adjustment)
+jolts_hires(
+  bls_key,
+  series = "nfp",
+  start_year,
+  end_year,
+  adjustment,
+  data_levels = "R"
+)
 }
 \arguments{
 \item{bls_key}{BLS API key for the user. See vignette.}
@@ -18,6 +25,8 @@ hiring.}
 \item{end_year}{Numeric. Year to end data download.}
 
 \item{adjustment}{Character vector. Seasonal adjustment ("S") or not ("U") or both.}
+
+\item{data_levels}{String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.}
 }
 \description{
 \code{jolts_hires} downloads pre-packaged hiring data from the JOLTS database.
@@ -25,8 +34,8 @@ hiring.}
 \details{
 This function downloads and cleans pre-packaged hiring data from the JOLTS database. The user
 has four choices for hiring data: non-farm hiring, private hiring, super sector or sector hiring.
-The data is formatted in terms of hiring rates similar to the quoted JOLTS series. The
-function reflects the October 2020 update to the JOLTS data series.
+The data is formatted in terms of hiring rates as a default ot be similar to the quoted JOLTS
+series. The function reflects the October 2020 update to the JOLTS data series.
 }
 \examples{
 jolts_df = jolts_hires(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")

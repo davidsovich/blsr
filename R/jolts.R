@@ -51,8 +51,8 @@ jolts_download = function(bls_key, start_year, end_year, adjustment, industries,
 #'
 #' This function downloads and cleans pre-packaged hiring data from the JOLTS database. The user
 #' has four choices for hiring data: non-farm hiring, private hiring, super sector or sector hiring.
-#' The data is formatted in terms of hiring rates similar to the quoted JOLTS series. The
-#' function reflects the October 2020 update to the JOLTS data series.
+#' The data is formatted in terms of hiring rates as a default ot be similar to the quoted JOLTS
+#' series. The function reflects the October 2020 update to the JOLTS data series.
 #'
 #' @export
 #'
@@ -63,10 +63,11 @@ jolts_download = function(bls_key, start_year, end_year, adjustment, industries,
 #' @param series Character. Data series. Either non-farm hiring ("nfp"), private hiring
 #' ("private"), supersector hiring ("super"), or sector hiring ("sector"). Defaults to non-farm
 #' hiring.
+#' @param data_levels String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.
 #' @examples
 #' jolts_df = jolts_hires(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 #'
-jolts_hires = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+jolts_hires = function(bls_key, series = "nfp", start_year, end_year, adjustment, data_levels = "R") {
    if(series == "nfp") {
       industries = "000000"
    } else if (series == "private") {
@@ -85,7 +86,7 @@ jolts_hires = function(bls_key, series = "nfp", start_year, end_year, adjustment
       adjustment = adjustment,
       industries = industries,
       data_types = "HI",
-      data_levels = "R"
+      data_levels = data_levels
    )
 }
 
@@ -95,8 +96,8 @@ jolts_hires = function(bls_key, series = "nfp", start_year, end_year, adjustment
 #'
 #' This function downloads and cleans pre-packaged separations data from the JOLTS database. The
 #' user has three choices for separations data: non-farm separations, private separations, or super
-#' sector hiring. The data is formatted in terms of rates similar to the quoted JOLTS
-#' series. Separations is equal to the sum of layoffs, quits, and other separations. The function
+#' sector hiring. The data is formatted in terms of rates as a default ot be similar to the quoted
+#' JOLTS series. Separations is equal to the sum of layoffs, quits, and other separations. The function
 #' reflects the October 2020 update to the JOLTS data series.
 #'
 #' @export
@@ -108,10 +109,11 @@ jolts_hires = function(bls_key, series = "nfp", start_year, end_year, adjustment
 #' @param series Character. Data series. Either non-farm separations ("nfp"), private separations
 #' ("private"), supersector separations ("super"), or sector separations ("sector"). Defaults to
 #' non-farm separations.
+#' @param data_levels String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.
 #' @examples
 #' jolts_df = jolts_seps(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 #'
-jolts_seps = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+jolts_seps = function(bls_key, series = "nfp", start_year, end_year, adjustment, data_levels = "R") {
    if(series == "nfp") {
       industries = "000000"
    } else if (series == "private") {
@@ -130,7 +132,7 @@ jolts_seps = function(bls_key, series = "nfp", start_year, end_year, adjustment)
       adjustment = adjustment,
       industries = industries,
       data_types = "TS",
-      data_levels = "R"
+      data_levels = data_levels
    )
 }
 
@@ -140,8 +142,8 @@ jolts_seps = function(bls_key, series = "nfp", start_year, end_year, adjustment)
 #'
 #' This function downloads and cleans pre-packaged layoffs data from the JOLTS database. The
 #' user has three choices for layoffs data: non-farm layoffs, private layoffs, or super
-#' sector hiring. The data is formatted in terms of rates similar to the quoted JOLTS
-#' series. The function reflects the October 2020 update to the JOLTS data series.
+#' sector hiring. The data is formatted in terms of rates by default to be similar to the quoted
+#' JOLTS series. The function reflects the October 2020 update to the JOLTS data series.
 #'
 #' @export
 #'
@@ -152,10 +154,11 @@ jolts_seps = function(bls_key, series = "nfp", start_year, end_year, adjustment)
 #' @param series Character. Data series. Either non-farm layoffs ("nfp"), private layoffs
 #' ("private"), supersector layoffs ("super"), or sector layoffs ("sector"). Defaults to non-farm
 #' layoffs.
+#' @param data_levels String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.
 #' @examples
 #' jolts_df = jolts_layoffs(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 #'
-jolts_layoffs = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+jolts_layoffs = function(bls_key, series = "nfp", start_year, end_year, adjustment, data_levels = "R") {
    if(series == "nfp") {
       industries = "000000"
    } else if (series == "private") {
@@ -174,7 +177,7 @@ jolts_layoffs = function(bls_key, series = "nfp", start_year, end_year, adjustme
       adjustment = adjustment,
       industries = industries,
       data_types = "LD",
-      data_levels = "R"
+      data_levels = data_levels
    )
 }
 
@@ -184,8 +187,8 @@ jolts_layoffs = function(bls_key, series = "nfp", start_year, end_year, adjustme
 #'
 #' This function downloads and cleans pre-packaged quits data from the JOLTS database. The
 #' user has three choices for quits data: non-farm quits, private quits, or super
-#' sector hiring. The data is formatted in terms of rates similar to the quoted JOLTS
-#' series. The function reflects the October 2020 update to the JOLTS data series.
+#' sector hiring. The data is formatted in terms of rates by default to be similar to the quoted
+#' JOLTS series. The function reflects the October 2020 update to the JOLTS data series.
 #'
 #' @export
 #'
@@ -195,10 +198,11 @@ jolts_layoffs = function(bls_key, series = "nfp", start_year, end_year, adjustme
 #' @param adjustment Character vector. Seasonal adjustment ("S") or not ("U") or both.
 #' @param series Character. Data series. Either non-farm quits ("nfp"), private quits
 #' ("private"), supersector quits ("super"), or sector quits ("sector"). Defaults to non-farm quits.
+#' @param data_levels String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.
 #' @examples
 #' jolts_df = jolts_quits(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 #'
-jolts_quits = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+jolts_quits = function(bls_key, series = "nfp", start_year, end_year, adjustment, data_levels = "R") {
    if(series == "nfp") {
       industries = "000000"
    } else if (series == "private") {
@@ -217,7 +221,7 @@ jolts_quits = function(bls_key, series = "nfp", start_year, end_year, adjustment
       adjustment = adjustment,
       industries = industries,
       data_types = "QU",
-      data_levels = "R"
+      data_levels = data_levels
    )
 }
 
@@ -227,7 +231,7 @@ jolts_quits = function(bls_key, series = "nfp", start_year, end_year, adjustment
 #'
 #' This function downloads and cleans pre-packaged other separations data from the JOLTS database.
 #' The user has three choices for other separations data: non-farm, private, or super
-#' sector. The data is formatted in terms of rates similar to the quoted JOLTS
+#' sector. The data is formatted in terms of rates by default to be similar to the quoted JOLTS
 #' series. The function reflects the October 2020 update to the JOLTS data series.
 #'
 #' @export
@@ -238,10 +242,11 @@ jolts_quits = function(bls_key, series = "nfp", start_year, end_year, adjustment
 #' @param adjustment Character vector. Seasonal adjustment ("S") or not ("U") or both.
 #' @param series Character. Data series. Either non-farm other ("nfp"), private other
 #' ("private"), supersector other ("super"). or sector other ("sector"). Defaults to non-farm other.
+#' @param data_levels String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.
 #' @examples
 #' jolts_df = jolts_others(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 #'
-jolts_others = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+jolts_others = function(bls_key, series = "nfp", start_year, end_year, adjustment, data_levels = "R") {
    if(series == "nfp") {
       industries = "000000"
    } else if (series == "private") {
@@ -260,18 +265,18 @@ jolts_others = function(bls_key, series = "nfp", start_year, end_year, adjustmen
       adjustment = adjustment,
       industries = industries,
       data_types = "OS",
-      data_levels = "R"
+      data_levels = data_levels
    )
 }
 
 #' Download job openings data from the Job Opening and Labor Turnover survey (JOLTS).
 #'
-#' \code{jolts_seps} downloads pre-packaged openings data from the JOLTS database.
+#' \code{jolts_openings} downloads pre-packaged openings data from the JOLTS database.
 #'
 #' This function downloads and cleans pre-packaged job openings data from the JOLTS database. The
 #' user has three choices for openings data: non-farm openings, private openings, or super
-#' sector hiring. The data is formatted in terms of levels similar to the quoted JOLTS
-#' series. The function reflects the October 2020 update to the JOLTS data series.
+#' sector hiring. The data is formatted in terms of levels by default to be similar to the quoted
+#' JOLTS series. The function reflects the October 2020 update to the JOLTS data series.
 #'
 #' @export
 #'
@@ -282,10 +287,11 @@ jolts_others = function(bls_key, series = "nfp", start_year, end_year, adjustmen
 #' @param series Character. Data series. Either non-farm openings ("nfp"), private openings
 #' ("private"), supersector openings ("super"), or sector openings ("sector"). Defaults to non-farm
 #' openings.
+#' @param data_levels String. Rate ("R") or level ("L"). Defaults to level as reported by JOLTS.
 #' @examples
 #' jolts_df = jolts_openings(Sys.getenv("BLS_KEY"), "nfp", 2010, 2015, "U")
 #'
-jolts_openings = function(bls_key, series = "nfp", start_year, end_year, adjustment) {
+jolts_openings = function(bls_key, series = "nfp", start_year, end_year, adjustment, data_levels = "L") {
    if(series == "nfp") {
       industries = "000000"
    } else if (series == "private") {
@@ -304,9 +310,11 @@ jolts_openings = function(bls_key, series = "nfp", start_year, end_year, adjustm
       adjustment = adjustment,
       industries = industries,
       data_types = "JO",
-      data_levels = "L"
+      data_levels = data_levels
    )
 }
+
+
 
 
 

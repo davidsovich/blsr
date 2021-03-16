@@ -4,7 +4,14 @@
 \alias{jolts_seps}
 \title{Download separations data from the Job Opening and Labor Turnover survey (JOLTS).}
 \usage{
-jolts_seps(bls_key, series = "nfp", start_year, end_year, adjustment)
+jolts_seps(
+  bls_key,
+  series = "nfp",
+  start_year,
+  end_year,
+  adjustment,
+  data_levels = "R"
+)
 }
 \arguments{
 \item{bls_key}{BLS API key for the user. See vignette.}
@@ -18,6 +25,8 @@ non-farm separations.}
 \item{end_year}{Numeric. Year to end data download.}
 
 \item{adjustment}{Character vector. Seasonal adjustment ("S") or not ("U") or both.}
+
+\item{data_levels}{String. Rate ("R") or level ("L"). Defaults to rate as reported by JOLTS.}
 }
 \description{
 \code{jolts_seps} downloads pre-packaged separations data from the JOLTS database.
@@ -25,8 +34,8 @@ non-farm separations.}
 \details{
 This function downloads and cleans pre-packaged separations data from the JOLTS database. The
 user has three choices for separations data: non-farm separations, private separations, or super
-sector hiring. The data is formatted in terms of rates similar to the quoted JOLTS
-series. Separations is equal to the sum of layoffs, quits, and other separations. The function
+sector hiring. The data is formatted in terms of rates as a default ot be similar to the quoted
+JOLTS series. Separations is equal to the sum of layoffs, quits, and other separations. The function
 reflects the October 2020 update to the JOLTS data series.
 }
 \examples{
